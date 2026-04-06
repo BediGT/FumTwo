@@ -351,9 +351,9 @@ AWeapon** APlayerCharacter::GetOtherWeapon()
 
 void APlayerCharacter::ThrowGrenade()
 { 
-	if (GrenadesComponent)
+	if (!GrenadesComponent)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] Inventory is invalid!"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("[%s] Grenades component is invalid!"), *GetNameSafe(this));
 		return;
 	}	
 
@@ -406,7 +406,7 @@ void APlayerCharacter::UpdateGrenades() const
 		HUD->UpdateGrenades(GrenadesComponent->GetGrenades());
 	}
 	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or grenade component is invalid!"), *GetNameSafe(this))
+		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or grenade component is invalid!"), *GetNameSafe(this));
 }
 
 void APlayerCharacter::UpdateEquipment() const

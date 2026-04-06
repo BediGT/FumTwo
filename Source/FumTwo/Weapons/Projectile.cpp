@@ -86,11 +86,9 @@ void AProjectile::OnHit(
 	FVector NormalImpulse,
 	const FHitResult& Hit)
 {
-	if ((OtherActor != nullptr) &&
-		(OtherActor != this) &&
-		(OtherComp != nullptr))
+	if (OtherActor && OtherActor != this && OtherComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("HIT SOMETHING"))
+		UE_LOG(LogTemp, Warning, TEXT("HIT SOMETHING"));
 		Destroy();
 	}
 }
