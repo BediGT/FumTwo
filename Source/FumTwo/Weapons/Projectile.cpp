@@ -4,9 +4,7 @@
 #include "Projectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
-#include "../Enemies/Enemy.h"
-#include "../Components/WeakspotComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "../Interfaces/Damageable.h"
 
 AProjectile::AProjectile()
 {
@@ -43,10 +41,9 @@ AProjectile::AProjectile()
 	InitialLifeSpan = 10.0f;
 }
 
-void AProjectile::SetDamage(const float NewDamage)
+void AProjectile::SetDamageDA(const UDamageDA* NewDamageDA)
 {
-	if (NewDamage > 0.0f)
-		Damage = NewDamage;
+	DamageDA = NewDamageDA;
 }
 
 void AProjectile::Tick(float DeltaTime)
@@ -61,20 +58,10 @@ void AProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	bool bFromSweep,
 	const FHitResult& OverlapResult)
 {
-	if (IsValid(OtherActor))
+	IDamageable* DamageableActor = Cast<IDamageable>(OtherActor);
+	if (DamageableActor && DamageDA)
 	{
-		float FinalDamage = Damage;
-
-		UWeakspotComponent* WeakspotComp =  OtherActor->FindComponentByClass<UWeakspotComponent>();
-		if (WeakspotComp && WeakspotComp->IsBoneWeakspot(OverlapResult.BoneName))
-			FinalDamage *= WeakspotMultiplier;
-
-		const FName Name = OverlapResult.BoneName;
-		UE_LOG(LogTemp, Warning, TEXT("Damage: %f, Bone name: %s"), FinalDamage, *Name.ToString());
-		
-		UGameplayStatics::ApplyPointDamage(
-			OtherActor, FinalDamage, GetActorForwardVector(), OverlapResult, nullptr, this, UDamageType::StaticClass());
-		
+		DamageableActor->TakeDamage(*DamageDA, OverlapResult.BoneName);
 		Destroy();
 	}
 }

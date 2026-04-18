@@ -395,8 +395,6 @@ void APlayerCharacter::UpdateWeapons()
 	AWeapon** OtherWeapon = GetOtherWeapon();
 	if (OtherWeapon && *OtherWeapon)
 		HUD->UpdateOtherWeapon((*OtherWeapon)->GetWeaponTypeFString());
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] Other weapon is invalid!"), *GetNameSafe(this));
 }
 
 void APlayerCharacter::UpdateGrenades() const

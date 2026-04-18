@@ -20,10 +20,7 @@ void UWeakspotComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 bool UWeakspotComponent::IsBoneWeakspot(const FName& BoneName) const
 {
-	if (WeakspotBones.Contains(BoneName))
-		return true;
-
-	return false;
+	return WeakspotBones.Contains(BoneName);
 }
 
 

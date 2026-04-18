@@ -12,7 +12,7 @@ class FUMTWO_API UWeakspotComponent : public UActorComponent
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Weakspot bones")
-	TArray<FName> WeakspotBones;
+	TSet<FName> WeakspotBones;
 
 public:
 	UWeakspotComponent();

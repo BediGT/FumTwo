@@ -6,7 +6,7 @@
 
 #include "Sound/SoundWave.h"
 #include "Kismet/GameplayStatics.h"
-#include "WeaponDataAsset.h"
+#include "../DataAssets/WeaponDA.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
 
@@ -32,8 +32,7 @@ void AWeapon::BeginPlay()
 
 	MagAtTheMoment = WeaponData->MagazineSize;
 	AmmoAtTheMoment = WeaponData->AmmunitionSize;
-	if (WeaponData)
-		MaxAmmo = WeaponData->MagazineSize + WeaponData->AmmunitionSize;
+	MaxAmmo = WeaponData->MagazineSize + WeaponData->AmmunitionSize;
 }
 
 FRotator AWeapon::GetSpreadRotator() const
@@ -66,8 +65,10 @@ void AWeapon::Fire(const FTransform& TransformationParameters)
 			
 			for (int32 i = 0; i < WeaponData->Pelets; ++i)
 			{
-				World->SpawnActor<AProjectile>(
+				AProjectile* Projectile = World->SpawnActor<AProjectile>(
 					ProjectileClass, TransformationParameters.GetLocation(),FRotator(TransformationParameters.GetRotation()) + GetSpreadRotator(), ActorSpawnParams);
+
+				Projectile->SetDamageDA(WeaponData->DamageDA);
 			}
 			
 			MagAtTheMoment--;
