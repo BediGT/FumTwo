@@ -18,8 +18,6 @@ AEnemy::AEnemy()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	WeakspotComponent->RegisterComponent();
 }
 
 void AEnemy::Tick(float DeltaTime)
@@ -32,8 +30,13 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+void AEnemy::TakeDamage(const UDamageDA& DamageData, const FName& BoneName)
 {
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float Damage = DamageData.Damage;
+
+	if (WeakspotComponent->IsBoneWeakspot(BoneName))
+		Damage *= DamageData.CriticalMultiplier;
+	
+	UE_LOG(LogTemp, Error, TEXT("Applied: %f damage"), Damage);
 }
 

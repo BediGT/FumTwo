@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include"../DataAssets/DamageDA.h"
 #include "Projectile.generated.h"
 
 class USphereComponent;
@@ -25,22 +26,19 @@ class FUMTWO_API AProjectile : public AActor
 	UStaticMeshComponent* StaticMeshComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
-	float Damage = 1.0f;
-	
-	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
-	float WeakspotMultiplier = 1.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
 	float MovementSpeed = 10000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
 	float Gravity = 0.0f;
 
+	UPROPERTY()
+	const UDamageDA* DamageDA = nullptr;
+
 public:	
 
 	AProjectile();
 
-	void SetDamage(float NewDamage);
+	void SetDamageDA(const UDamageDA* NewDamageDA);
 
 	virtual void Tick(float DeltaTime) override;
 

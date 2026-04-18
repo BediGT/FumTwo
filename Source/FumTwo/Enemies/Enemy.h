@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FumTwo/Components/WeakspotComponent.h"
+#include "../Interfaces/Damageable.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
@@ -11,7 +11,7 @@ class UBoxComponent;
 class UWeakspotComponent;
 
 UCLASS()
-class FUMTWO_API AEnemy : public ACharacter
+class FUMTWO_API AEnemy : public ACharacter, public IDamageable
 {
 	GENERATED_BODY()
 
@@ -28,6 +28,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void TakeDamage(const UDamageDA& DamageData, const FName& BoneName) override;
 };

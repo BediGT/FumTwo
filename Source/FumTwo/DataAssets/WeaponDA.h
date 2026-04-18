@@ -4,14 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "WeaponDataAsset.generated.h"
+#include "DamageDA.h"
+#include "WeaponDA.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)
-class FUMTWO_API UWeaponDataAsset : public UDataAsset
+class FUMTWO_API UWeaponDA : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
+	const UDamageDA* DamageDA = nullptr;
+	
 	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	int32 MagazineSize = 1;
 

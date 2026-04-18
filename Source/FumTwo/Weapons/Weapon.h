@@ -11,7 +11,7 @@
 #include "Weapon.generated.h"
 
 class AProjectile;
-class UWeaponDataAsset;
+class UWeaponDA;
 class USkeletalMeshComponent;
 class USphereComponent;
 
@@ -27,7 +27,7 @@ class FUMTWO_API AWeapon : public AActor, public IInteractable, public IAmmoSour
 	TSubclassOf<AProjectile> ProjectileClass = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	UWeaponDataAsset* WeaponData = nullptr;
+	UWeaponDA* WeaponData = nullptr;
 
 	int32 MagAtTheMoment = 1;
 	int32 AmmoAtTheMoment = 1;
