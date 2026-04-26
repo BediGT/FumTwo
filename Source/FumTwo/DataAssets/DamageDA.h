@@ -17,4 +17,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Damage Stats")
 	float CriticalMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Damage Stats")
+	float AntiBodyMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Damage Stats")
+	float AntiShieldMultiplier = 1.0f;
 };

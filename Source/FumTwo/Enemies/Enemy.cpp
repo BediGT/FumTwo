@@ -3,6 +3,7 @@
 
 #include "Enemy.h"
 #include "../Components/WeakspotComponent.h"
+#include "../Components/HealthComponent.h"
 
 AEnemy::AEnemy()
 {
@@ -13,11 +14,15 @@ AEnemy::AEnemy()
 	MeshComponent->SetGenerateOverlapEvents(true);
 	
 	WeakspotComponent = CreateDefaultSubobject<UWeakspotComponent>(TEXT("Weakspot Component"));
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HealthComponent)
+		HealthComponent->OnZeroHealthDelegate.BindUObject(this, &AEnemy::Die);
 }
 
 void AEnemy::Tick(float DeltaTime)
@@ -32,11 +37,21 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AEnemy::TakeDamage(const UDamageDA& DamageData, const FName& BoneName)
 {
-	float Damage = DamageData.Damage;
+	if (HealthComponent)
+		HealthComponent->TakeDamage(&DamageData, WeakspotComponent->IsBoneWeakspot(BoneName));
+}
 
-	if (WeakspotComponent->IsBoneWeakspot(BoneName))
-		Damage *= DamageData.CriticalMultiplier;
+void AEnemy::Die() const
+{
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+	if (!MeshComponent)
+		return;
 	
-	UE_LOG(LogTemp, Error, TEXT("Applied: %f damage"), Damage);
+	MeshComponent->SetSimulatePhysics(true);
+	MeshComponent->SetCollisionProfileName(TEXT("Ragdoll"));
+	MeshComponent->WakeAllRigidBodies();
+    
+	if (HealthComponent)
+		HealthComponent->OnZeroHealthDelegate.Unbind();
 }
 
