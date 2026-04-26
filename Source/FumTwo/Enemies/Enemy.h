@@ -9,6 +9,7 @@
 
 class UBoxComponent;
 class UWeakspotComponent;
+class UHealthComponent;
 
 UCLASS()
 class FUMTWO_API AEnemy : public ACharacter, public IDamageable
@@ -17,6 +18,9 @@ class FUMTWO_API AEnemy : public ACharacter, public IDamageable
 
 	UPROPERTY(EditAnywhere)
 	UWeakspotComponent* WeakspotComponent = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	UHealthComponent* HealthComponent = nullptr;
 
 public:
 	AEnemy();
@@ -30,4 +34,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void TakeDamage(const UDamageDA& DamageData, const FName& BoneName) override;
+
+	void Die() const;
 };
