@@ -1,0 +1,14 @@
+﻿.idea/
+.vs/
+FumTwo.sln.DotSettings.user
+.vsconfig
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+FumTwo.sln
+Content/_FromMarket/
+Content/StarterContent/
+Content/AnimStarterPack/
+Content/__ExternalActors__/
+Content/__ExternalObjects__/
