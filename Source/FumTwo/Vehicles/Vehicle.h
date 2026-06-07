@@ -8,13 +8,26 @@
 #include "GameFramework/Pawn.h"
 #include "Vehicle.generated.h"
 
+class UStaticMeshComponent;
+class USphereComponent;
+
 UCLASS()
 class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteractable
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(VisibleAnywhere, Category = "Static Mesh")
+	UStaticMeshComponent* StaticMesh = nullptr;
+
+	// Interactable
+	UPROPERTY(VisibleAnywhere, Category = "Interactable")
+	USphereComponent* InteractionSphere = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Interactable")
+	float InteractionRadius = 300.0f;
 
 	// Possessable
-	UPROPERTY(EditAnywhere, Category = "Input Mapping Context")
+	UPROPERTY(VisibleAnywhere, Category = "Input Mapping Context")
 	UInputMappingContext* MappingContext = nullptr;
 
 public:
@@ -29,7 +42,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Possessable
-	virtual const UInputMappingContext* GetMappingContext() override;
+	virtual UInputMappingContext* GetMappingContext() override;
 
 	// Interactable
 	virtual void Interact(AActor* Interactor) override;

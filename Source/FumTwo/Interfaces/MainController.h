@@ -20,4 +20,5 @@ class FUMTWO_API IMainController
 public:
 	virtual void ZoomIn(const float& ZoomFov) = 0;
 	virtual void ResetZoom() = 0;
+	virtual void SwitchPawn(APawn* Pawn) = 0;
 };

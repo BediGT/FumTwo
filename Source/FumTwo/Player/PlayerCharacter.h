@@ -36,14 +36,9 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCameraComponent* Camera = nullptr;
 
-	// UPROPERTY(EditAnywhere, Category = "Camera")
-	// float FieldOfView = 98.0f;
-
 	// Input actions
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Move = nullptr;
-	// UPROPERTY(EditAnywhere, Category = "Input")
-	// UInputAction* IA_Look = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Jump = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -169,5 +164,5 @@ public:
 	void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	//Possessable
-	virtual const UInputMappingContext* GetMappingContext() override;
+	virtual UInputMappingContext* GetMappingContext() override;
 };

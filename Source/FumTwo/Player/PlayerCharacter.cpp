@@ -143,19 +143,6 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-// void APlayerCharacter::Look(const FInputActionValue& Value)
-// {
-// 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-//
-// 	if (Controller != nullptr)
-// 	{
-// 		AddControllerYawInput(LookAxisVector.X * MyController->GetSensitivity());
-// 		AddControllerPitchInput(-LookAxisVector.Y * MyController->GetSensitivity());
-// 	}
-// 	else
-// 		UE_LOG(LogTemp, Error, TEXT("[%s] m_MyController is invalid!"), *GetNameSafe(this));
-// }
-
 bool APlayerCharacter::CanJumpInternal_Implementation() const
 {
 	bool bJumpIsAllowed = GetMovementComponent()->IsJumpAllowed()
@@ -493,7 +480,7 @@ void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	}
 }
 
-const UInputMappingContext* APlayerCharacter::GetMappingContext()
+UInputMappingContext* APlayerCharacter::GetMappingContext()
 {
 	return MappingContext;
 }

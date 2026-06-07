@@ -4,6 +4,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "FumTwo/Interfaces/Possessable.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -64,4 +65,18 @@ void AMainPlayerController::ResetZoom()
 {
 	PlayerCameraManager->SetFOV(DefaultFov);
 	Sensitivity = DefaultSensitivity;
+}
+
+void AMainPlayerController::SwitchPawn(APawn* NewPawn)
+{
+	if (!NewPawn)
+		return;
+	
+	if (IPossessable* Possessable = Cast<IPossessable>(NewPawn))
+	{
+		LastPossessedPawn = Possessable;
+		UnPossess();
+		Possess(NewPawn);
+		IMC_DefaultMappingContext = Possessable->GetMappingContext();
+	}
 }

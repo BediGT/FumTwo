@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
+class IPossessable;
 class UInputAction;
 struct FInputActionValue;
 class UUserWidget;
@@ -26,10 +27,12 @@ class FUMTWO_API AMainPlayerController : public APlayerController, public IMainC
 	double DefaultSensitivity = 0.253994f;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputMappingContext* IMC_DefaultMappingContext; 
+	UInputMappingContext* IMC_DefaultMappingContext = nullptr; 
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Look = nullptr;
+
+	IPossessable* LastPossessedPawn = nullptr;
 
 protected:
 	virtual void BeginPlay() override;
@@ -44,4 +47,5 @@ protected:
 public:
 	virtual void ZoomIn(const float& ZoomFov) override;
 	virtual void ResetZoom() override;
+	virtual void SwitchPawn(APawn* NewPawn) override;
 };

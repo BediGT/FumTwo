@@ -2,10 +2,21 @@
 
 
 #include "Vehicle.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "FumTwo/Interfaces/MainController.h"
 
 AVehicle::AVehicle()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");
+	StaticMesh->SetCollisionProfileName("Pawn");
+	RootComponent = StaticMesh;
+
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>(FName("InteractionSphere"));
+	InteractionSphere->SetupAttachment(RootComponent);
+	InteractionSphere->SetSphereRadius(InteractionRadius);
 }
 
 void AVehicle::BeginPlay()
@@ -24,14 +35,15 @@ void AVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-const UInputMappingContext* AVehicle::GetMappingContext()
+UInputMappingContext* AVehicle::GetMappingContext()
 {
 	return MappingContext;
 }
 
 void AVehicle::Interact(AActor* Interactor)
 {
-	
+	if (IMainController* MainController = Cast<IMainController>(Interactor->GetInstigatorController()))
+		MainController->SwitchPawn(this);
 }
 
 bool AVehicle::CanInteract(AActor* Interactor)
