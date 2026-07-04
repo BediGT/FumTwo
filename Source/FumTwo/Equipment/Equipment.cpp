@@ -5,8 +5,12 @@
 
 AEquipment::AEquipment()
 {
-	EquipmentMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh"));
-	EquipmentMesh->SetCollisionProfileName("NoCollision");
+	EquipmentMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Equipment Mesh"));
+	EquipmentMesh->SetSimulatePhysics(true);
+	EquipmentMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
+	EquipmentMesh->GetBodyInstance()->bLockXRotation = true;
+	EquipmentMesh->GetBodyInstance()->bLockYRotation = true;
+	EquipmentMesh->GetBodyInstance()->bLockZRotation = true;
 	RootComponent = EquipmentMesh;
 }
 
