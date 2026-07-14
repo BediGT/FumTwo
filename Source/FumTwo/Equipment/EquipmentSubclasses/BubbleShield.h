@@ -12,9 +12,6 @@ class FUMTWO_API ABubbleShield : public AEquipment
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Components")
-	UBoxComponent* CollisionBox;
-
-	UPROPERTY(EditAnywhere, Category = "Components")
 	UStaticMeshComponent* BubbleMesh = nullptr;
 	
 public:

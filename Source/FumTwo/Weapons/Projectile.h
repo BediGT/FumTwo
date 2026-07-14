@@ -7,7 +7,6 @@
 #include"../DataAssets/DamageDA.h"
 #include "Projectile.generated.h"
 
-class USphereComponent;
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
 
@@ -15,10 +14,7 @@ UCLASS()
 class FUMTWO_API AProjectile : public AActor
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = "Components")
-	USphereComponent* CollisionSphere = nullptr;
-
+	
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovement = nullptr;
 

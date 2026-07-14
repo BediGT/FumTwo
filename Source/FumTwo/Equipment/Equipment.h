@@ -7,7 +7,6 @@
 #include "Equipment.generated.h"
 
 class UStaticMeshComponent;
-class UBoxComponent;
 
 UCLASS()
 class FUMTWO_API AEquipment : public AActor

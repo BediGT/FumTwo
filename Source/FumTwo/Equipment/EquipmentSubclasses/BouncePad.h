@@ -6,16 +6,12 @@
 #include "../Equipment.h"
 #include "BouncePad.generated.h"
 
-class UBoxComponent;
 class USphereComponent;
 
 UCLASS()
 class FUMTWO_API ABouncePad : public AEquipment
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UBoxComponent* CollisionBox;
 
 	UPROPERTY(EditAnywhere, Category = "Components")
 	USphereComponent* ImpulseSphere;
