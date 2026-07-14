@@ -10,25 +10,34 @@
 
 class UStaticMeshComponent;
 class USphereComponent;
+struct FInputActionValue;
+class UCameraComponent;
 
 UCLASS()
 class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteractable
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	UCameraComponent* Camera = nullptr;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Static Mesh")
 	UStaticMeshComponent* StaticMesh = nullptr;
 
-	// Interactable
 	UPROPERTY(VisibleAnywhere, Category = "Interactable")
 	USphereComponent* InteractionSphere = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "Interactable")
 	float InteractionRadius = 300.0f;
 
-	// Possessable
 	UPROPERTY(VisibleAnywhere, Category = "Input Mapping Context")
 	UInputMappingContext* MappingContext = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* IA_Drive = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MovementSpeed = 1000.0f;
 
 public:
 	AVehicle();
@@ -40,6 +49,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void Move(const FInputActionValue& Value);
 
 	// Possessable
 	virtual UInputMappingContext* GetMappingContext() override;

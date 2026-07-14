@@ -69,14 +69,16 @@ void AMainPlayerController::ResetZoom()
 
 void AMainPlayerController::SwitchPawn(APawn* NewPawn)
 {
-	if (!NewPawn)
-		return;
-	
 	if (IPossessable* Possessable = Cast<IPossessable>(NewPawn))
 	{
 		LastPossessedPawn = Possessable;
-		UnPossess();
-		Possess(NewPawn);
 		IMC_DefaultMappingContext = Possessable->GetMappingContext();
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			Subsystem->ClearAllMappings();
+			Subsystem->AddMappingContext(IMC_DefaultMappingContext, 0);
+		}
+			
+		Possess(NewPawn);
 	}
 }

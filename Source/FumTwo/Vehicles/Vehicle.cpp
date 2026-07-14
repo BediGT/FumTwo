@@ -4,6 +4,9 @@
 #include "Vehicle.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "EnhancedInputComponent.h"
+#include "Camera/CameraComponent.h"
+#include "InputActionValue.h"
 #include "FumTwo/Interfaces/MainController.h"
 
 AVehicle::AVehicle()
@@ -13,6 +16,11 @@ AVehicle::AVehicle()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");
 	StaticMesh->SetCollisionProfileName("Pawn");
 	RootComponent = StaticMesh;
+
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(RootComponent);
+	Camera->SetRelativeLocation(FVector(-200.f, 0.f, 150.f));
+	Camera->bUsePawnControlRotation = false;
 
 	InteractionSphere = CreateDefaultSubobject<USphereComponent>(FName("InteractionSphere"));
 	InteractionSphere->SetupAttachment(RootComponent);
@@ -30,9 +38,31 @@ void AVehicle::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AVehicle::SetupPlayerInputComponent(UInputComponent* VehicleInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	Super::SetupPlayerInputComponent(VehicleInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(VehicleInputComponent))
+	{
+		EnhancedInputComponent->BindAction(IA_Drive, ETriggerEvent::Triggered, this, &AVehicle::Move);
+	}
+	else
+		UE_LOG(LogTemp, Error, TEXT("[%s] Failed to find an Enhanced Input component!"), *GetNameSafe(this));
+}
+
+void AVehicle::Move(const FInputActionValue& Value)
+{
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		// Movement component is invalid thats why it's not moving
+		// TODO: make it move it move it
+
+		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
+		AddMovementInput(Forward * MovementSpeed, MovementVector.X);
+		AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
+	}
 }
 
 UInputMappingContext* AVehicle::GetMappingContext()
