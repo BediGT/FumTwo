@@ -8,6 +8,8 @@
 #include "Camera/CameraComponent.h"
 #include "InputActionValue.h"
 #include "FumTwo/Interfaces/MainController.h"
+#include "GameFramework/FloatingPawnMovement.h"
+#include "GameFramework/SpringArmComponent.h"
 
 AVehicle::AVehicle()
 {
@@ -17,14 +19,23 @@ AVehicle::AVehicle()
 	StaticMesh->SetCollisionProfileName("Pawn");
 	RootComponent = StaticMesh;
 
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(RootComponent);
-	Camera->SetRelativeLocation(FVector(-200.f, 0.f, 150.f));
-	Camera->bUsePawnControlRotation = false;
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
+	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->TargetArmLength = 400.f;
+	SpringArm->SocketOffset = FVector(0.f, 0.f, 75.f);
+	SpringArm->TargetOffset = FVector(0.f, 0.f, 50.f);
+	SpringArm->bUsePawnControlRotation = true;
+	SpringArm->bDoCollisionTest = true;
 
-	InteractionSphere = CreateDefaultSubobject<USphereComponent>(FName("InteractionSphere"));
+	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>("InteractionSphere");
 	InteractionSphere->SetupAttachment(RootComponent);
 	InteractionSphere->SetSphereRadius(InteractionRadius);
+
+	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>("MovementComponent");
+	MovementComponent->SetUpdatedComponent(RootComponent);
 }
 
 void AVehicle::BeginPlay()
@@ -42,24 +53,18 @@ void AVehicle::SetupPlayerInputComponent(UInputComponent* VehicleInputComponent)
 {
 	Super::SetupPlayerInputComponent(VehicleInputComponent);
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(VehicleInputComponent))
-	{
+	if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(VehicleInputComponent))
 		EnhancedInputComponent->BindAction(IA_Drive, ETriggerEvent::Triggered, this, &AVehicle::Move);
-	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("[%s] Failed to find an Enhanced Input component!"), *GetNameSafe(this));
 }
 
 void AVehicle::Move(const FInputActionValue& Value)
 {
-	const FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
+	if (Controller)
 	{
-		// Movement component is invalid thats why it's not moving
-		// TODO: make it move it move it
-
-		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
+		const FVector2D MovementVector = Value.Get<FVector2D>();
+		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.f);
 		AddMovementInput(Forward * MovementSpeed, MovementVector.X);
 		AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
 	}
@@ -72,7 +77,7 @@ UInputMappingContext* AVehicle::GetMappingContext()
 
 void AVehicle::Interact(AActor* Interactor)
 {
-	if (IMainController* MainController = Cast<IMainController>(Interactor->GetInstigatorController()))
+	if (auto MainController = Cast<IMainController>(Interactor->GetInstigatorController()))
 		MainController->SwitchPawn(this);
 }
 

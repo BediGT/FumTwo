@@ -12,6 +12,8 @@ class UStaticMeshComponent;
 class USphereComponent;
 struct FInputActionValue;
 class UCameraComponent;
+class UFloatingPawnMovement;
+class USpringArmComponent;
 
 UCLASS()
 class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteractable
@@ -20,12 +22,18 @@ class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteracta
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCameraComponent* Camera = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	USpringArmComponent* SpringArm = nullptr;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Static Mesh")
 	UStaticMeshComponent* StaticMesh = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "Interactable")
 	USphereComponent* InteractionSphere = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "MovementComponent")
+	UFloatingPawnMovement* MovementComponent = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "Interactable")
 	float InteractionRadius = 300.0f;

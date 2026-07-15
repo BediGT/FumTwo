@@ -29,7 +29,6 @@ void AMainPlayerController::SetupInputComponent()
 void AMainPlayerController::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-
 	AddYawInput(LookAxisVector.X * Sensitivity);
 	AddPitchInput(-LookAxisVector.Y * Sensitivity);
 }
