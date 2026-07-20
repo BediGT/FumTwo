@@ -78,7 +78,4 @@ public:
 	virtual bool CanInteract(AActor* Interactor) override;
 	virtual FString GetInteractionMessage() const override;
 	virtual const FVector GetInteractableLocation() const override;
-
-private:
-	bool IsDriverValid() const;
 };

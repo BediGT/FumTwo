@@ -64,23 +64,24 @@ void AVehicle::SetupPlayerInputComponent(UInputComponent* VehicleInputComponent)
 
 void AVehicle::Move(const FInputActionValue& Value)
 {
-	if (Controller)
-	{
-		const FVector2D MovementVector = Value.Get<FVector2D>();
-		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.f);
-		AddMovementInput(Forward * MovementSpeed, MovementVector.X);
-		AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
-	}
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+	const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.f);
+	AddMovementInput(Forward * MovementSpeed, MovementVector.X);
+	AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
 }
 
 void AVehicle::ExitVehicle()
 {
-	if (IsDriverValid())
+	if (DriverController)
 	{
 		DriverController->SwitchPawn(DriverBody->GetPawn());
-		DriverBody->OnExitVehicle();
-
 		DriverController = nullptr;
+	}
+
+	if (DriverBody)
+	{
+		DriverBody->GetPawn()->DetachFromActor({ EDetachmentRule::KeepWorld, true });
+		DriverBody->OnExitVehicle();
 		DriverBody = nullptr;
 	}
 }
@@ -95,16 +96,22 @@ void AVehicle::Interact(AActor* Interactor)
 	auto MainController = Cast<IMainController>(Interactor->GetInstigatorController());
 	auto Passenger = Cast<IPassenger>(Interactor);
 
-	DriverController = Interactor;
+	DriverController = Interactor->GetInstigatorController();
 	DriverBody = Interactor;
 
-	if (MainController && Passenger)
+	if (MainController)
 		MainController->SwitchPawn(this);
+
+	if (Passenger)
+	{
+		Passenger->OnEnterVehicle();
+		Interactor->AttachToActor(this, { EAttachmentRule::KeepRelative, true });
+	}
 }
 
 bool AVehicle::CanInteract(AActor* Interactor)
 {
-	return IsDriverValid();
+	return !DriverController && !DriverBody;
 }
 
 FString AVehicle::GetInteractionMessage() const
@@ -115,9 +122,4 @@ FString AVehicle::GetInteractionMessage() const
 const FVector AVehicle::GetInteractableLocation() const
 {
 	return GetActorLocation();
-}
-
-bool AVehicle::IsDriverValid() const
-{
-	return DriverController && DriverBody;
 }

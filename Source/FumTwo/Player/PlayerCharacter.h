@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "../Interfaces/Interactor.h"
 #include "FumTwo/Interfaces/Possessable.h"
+#include "FumTwo/Interfaces/Passenger.h"
 #include "PlayerCharacter.generated.h"
 
 class IMainController;
@@ -26,7 +27,7 @@ class UInventoryComponent;
 class AGrenade;
 
 UCLASS()
-class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable
+class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable, public IPassenger
 {
 	GENERATED_BODY()
 
@@ -164,5 +165,10 @@ public:
 	void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	//Possessable
-	virtual UInputMappingContext* GetMappingContext() override;
+	virtual const UInputMappingContext* GetMappingContext() const override;
+
+	// Passenger
+	virtual void OnEnterVehicle() override;
+	virtual void OnExitVehicle() override;
+	virtual APawn* GetPawn() override;
 };

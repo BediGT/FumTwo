@@ -132,13 +132,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
-		AddMovementInput(Forward * MovementSpeed, MovementVector.X);
-		AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
-	}
+	const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
+	AddMovementInput(Forward * MovementSpeed, MovementVector.X);
+	AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
 }
 
 bool APlayerCharacter::CanJumpInternal_Implementation() const
@@ -467,7 +463,7 @@ void APlayerCharacter::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 
 void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (IInteractable* Interactable = Cast<IInteractable>(OtherActor))
+	if (auto Interactable = Cast<IInteractable>(OtherActor))
 	{
 		OverlappingInteractables.Remove(Interactable);
 		if (OverlappingInteractables.IsEmpty())
@@ -478,7 +474,24 @@ void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	}
 }
 
-UInputMappingContext* APlayerCharacter::GetMappingContext()
+const UInputMappingContext* APlayerCharacter::GetMappingContext() const
 {
 	return MappingContext;
+}
+
+void APlayerCharacter::OnEnterVehicle()
+{
+	if (auto Capsule = GetCapsuleComponent())
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void APlayerCharacter::OnExitVehicle()
+{
+	if (auto Capsule = GetCapsuleComponent())
+		Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+APawn* APlayerCharacter::GetPawn()
+{
+	return Cast<APawn>(this);
 }
