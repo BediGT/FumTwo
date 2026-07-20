@@ -18,5 +18,5 @@ class FUMTWO_API IPossessable
 {
 	GENERATED_BODY()
 public:
-	virtual UInputMappingContext* GetMappingContext() = 0;
+	virtual const UInputMappingContext* GetMappingContext() const = 0;
 };

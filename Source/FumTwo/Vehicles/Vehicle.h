@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "FumTwo/Interfaces/Interactable.h"
 #include "FumTwo/Interfaces/Possessable.h"
+#include "FumTwo/Interfaces/Passenger.h"
+#include "FumTwo/Interfaces/MainController.h"
 #include "GameFramework/Pawn.h"
 #include "Vehicle.generated.h"
 
@@ -14,6 +16,7 @@ struct FInputActionValue;
 class UCameraComponent;
 class UFloatingPawnMovement;
 class USpringArmComponent;
+class UInputComponent;
 
 UCLASS()
 class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteractable
@@ -44,8 +47,14 @@ class FUMTWO_API AVehicle : public APawn, public IPossessable, public IInteracta
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Drive = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* IA_ExitVehicle = nullptr;
+
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MovementSpeed = 1000.0f;
+
+	TScriptInterface<IMainController> DriverController = nullptr;
+	TScriptInterface<IPassenger> DriverBody = nullptr;
 
 public:
 	AVehicle();
@@ -56,16 +65,20 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	void Move(const FInputActionValue& Value);
+	void ExitVehicle();
 
 	// Possessable
-	virtual UInputMappingContext* GetMappingContext() override;
+	virtual const UInputMappingContext* GetMappingContext() const override;
 
 	// Interactable
 	virtual void Interact(AActor* Interactor) override;
 	virtual bool CanInteract(AActor* Interactor) override;
 	virtual FString GetInteractionMessage() const override;
 	virtual const FVector GetInteractableLocation() const override;
+
+private:
+	bool IsDriverValid() const;
 };

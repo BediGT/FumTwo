@@ -14,6 +14,7 @@
 AVehicle::AVehicle()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bUseControllerRotationYaw = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");
 	StaticMesh->SetCollisionProfileName("Pawn");
@@ -41,7 +42,6 @@ AVehicle::AVehicle()
 void AVehicle::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void AVehicle::Tick(float DeltaTime)
@@ -54,7 +54,10 @@ void AVehicle::SetupPlayerInputComponent(UInputComponent* VehicleInputComponent)
 	Super::SetupPlayerInputComponent(VehicleInputComponent);
 
 	if (auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(VehicleInputComponent))
+	{
 		EnhancedInputComponent->BindAction(IA_Drive, ETriggerEvent::Triggered, this, &AVehicle::Move);
+		EnhancedInputComponent->BindAction(IA_ExitVehicle, ETriggerEvent::Started, this, &AVehicle::ExitVehicle);
+	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("[%s] Failed to find an Enhanced Input component!"), *GetNameSafe(this));
 }
@@ -70,20 +73,38 @@ void AVehicle::Move(const FInputActionValue& Value)
 	}
 }
 
-UInputMappingContext* AVehicle::GetMappingContext()
+void AVehicle::ExitVehicle()
+{
+	if (IsDriverValid())
+	{
+		DriverController->SwitchPawn(DriverBody->GetPawn());
+		DriverBody->OnExitVehicle();
+
+		DriverController = nullptr;
+		DriverBody = nullptr;
+	}
+}
+
+const UInputMappingContext* AVehicle::GetMappingContext() const 
 {
 	return MappingContext;
 }
 
 void AVehicle::Interact(AActor* Interactor)
 {
-	if (auto MainController = Cast<IMainController>(Interactor->GetInstigatorController()))
+	auto MainController = Cast<IMainController>(Interactor->GetInstigatorController());
+	auto Passenger = Cast<IPassenger>(Interactor);
+
+	DriverController = Interactor;
+	DriverBody = Interactor;
+
+	if (MainController && Passenger)
 		MainController->SwitchPawn(this);
 }
 
 bool AVehicle::CanInteract(AActor* Interactor)
 {
-	return true;
+	return IsDriverValid();
 }
 
 FString AVehicle::GetInteractionMessage() const
@@ -96,3 +117,7 @@ const FVector AVehicle::GetInteractableLocation() const
 	return GetActorLocation();
 }
 
+bool AVehicle::IsDriverValid() const
+{
+	return DriverController && DriverBody;
+}
