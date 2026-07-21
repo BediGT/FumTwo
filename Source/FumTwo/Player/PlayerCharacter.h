@@ -6,18 +6,6 @@
 #include "GameFramework/Character.h"
 #include "../Interfaces/Interactor.h"
 #include "PlayerCharacter.generated.h"
-#include <Containers/Array.h>
-#include <Templates/SubclassOf.h>
-#include <UObject/ObjectMacros.h>
-#include <UObject/WeakInterfacePtr.h>
-#include <Containers/Array.h>
-#include <HAL/Platform.h>
-#include <Components/InputComponent.h>
-#include <Components/PrimitiveComponent.h>
-#include <Engine/HitResult.h>
-#include <GameFramework/Actor.h>
-#include <FumTwo/Enums/EnumEquipmentType.h>
-#include <FumTwo/Enums/EnumWeaponTypes.h>
 
 class IAmmoSource;
 class AWeapon;
@@ -116,16 +104,15 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
 	UPROPERTY()
 	UGrenadesComponent* GrenadesComponent = nullptr;
 
-	TArray<TWeakInterfacePtr<IInteractable>> Interactables{};
+	TArray<IInteractable*> OverlappingInteractables{};
 
-	TWeakInterfacePtr<IInteractable> NearestInteractable = nullptr;
+	IInteractable* NearestAvailableInteractable = nullptr;
 
 public:
 	APlayerCharacter();
 
 protected:
 	virtual void BeginPlay() override;
-	void UpdateNearestInteractable();
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -142,11 +129,9 @@ public:
 
 	// Weapons
 	void FireCurrentWeapon();
-
 protected:
 	bool WeaponsNeedAmmo() const;
 	void AddAmmoToWeapons(IAmmoSource* AmmoSource) const;
-
 public:
 	void ReloadCurrentWeapon();
 	void StartZoomCurrentWeapon();
@@ -156,6 +141,7 @@ public:
 	void DetachCurrentWeapon() const;
 	void AttachWeapon(AWeapon* Weapon);
 	AWeapon** GetOtherWeapon();
+	
 
 	// Grenades
 	void ThrowGrenade();

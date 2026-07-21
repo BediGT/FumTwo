@@ -16,30 +16,6 @@
 #include "../Interfaces/AutoInteractable.h"
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
-#include <InputTriggers.h>
-#include <Templates/Casts.h>
-#include <Templates/SubclassOf.h>
-#include <UObject/Object.h>
-#include <UObject/UObjectBaseUtility.h>
-#include <UObject/UObjectGlobals.h>
-#include <Containers/Array.h>
-#include <CoreGlobals.h>
-#include <Delegates/Delegate.h>
-#include <GenericPlatform/GenericPlatformMisc.h>
-#include <HAL/Platform.h>
-#include <Logging/LogMacros.h>
-#include <Math/MathFwd.h>
-#include <Components/InputComponent.h>
-#include <Components/PrimitiveComponent.h>
-#include <Engine/EngineTypes.h>
-#include <Engine/HitResult.h>
-#include <Engine/World.h>
-#include <GameFramework/Actor.h>
-#include <GameFramework/Character.h>
-#include <cfloat>
-#include <FumTwo/Enums/EnumEquipmentType.h>
-#include <FumTwo/Enums/EnumWeaponTypes.h>
-#include <FumTwo/Interfaces/AmmoSource.h>
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -96,36 +72,29 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
-
-void APlayerCharacter::UpdateNearestInteractable()
-{
-	if (Interactables.IsEmpty())
-		return;
-
-	NearestInteractable = nullptr;
-	double MinDistance = DBL_MAX;
-	const FVector ActorLocation = GetActorLocation();
-	for (const auto& Interactable : Interactables)
-	{
-		if (!Interactable.IsValid() || !Interactable->CanInteract(this))
-			continue;
-
-		const double Distance = FVector::DistSquared(ActorLocation, Interactable->GetInteractableLocation());
-		if (Distance < MinDistance || NearestInteractable == nullptr)
-		{
-			NearestInteractable = Interactable;
-			MinDistance = Distance;
-		}
-	}
-
-	HUD->UpdateInteractionMessage(NearestInteractable.IsValid() ? NearestInteractable->GetInteractionMessage() : L"");
-}
-
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	UpdateNearestInteractable();
+	if (!OverlappingInteractables.IsEmpty())
+	{
+		NearestAvailableInteractable = nullptr;
+		double NearestAvailableInteractableDistance = DBL_MAX;
+		for (auto It = OverlappingInteractables.CreateIterator(); It; ++It)
+		{
+			const double Distance = FVector::Distance(GetActorLocation(), (*It)->GetInteractableLocation());
+			if ((Distance < NearestAvailableInteractableDistance || NearestAvailableInteractable == nullptr) && (*It)->CanInteract(this))
+			{
+				NearestAvailableInteractable = *It;
+				NearestAvailableInteractableDistance = Distance;
+			}
+		}
+
+		if (NearestAvailableInteractable)
+			HUD->UpdateInteractionMessage(NearestAvailableInteractable->GetInteractionMessage());
+		else
+			HUD->UpdateInteractionMessage("");
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -314,11 +283,11 @@ void APlayerCharacter::EndZoomCurrentWeapon()
 
 void APlayerCharacter::Interact()
 {
-	if (NearestInteractable)
+	if (NearestAvailableInteractable)
 	{
-		NearestInteractable->Interact(this);
-		Interactables.Remove(NearestInteractable);
-		NearestInteractable = nullptr;
+		NearestAvailableInteractable->Interact(this);
+		OverlappingInteractables.Remove(NearestAvailableInteractable);
+		NearestAvailableInteractable = nullptr;
 	}
 }
 
@@ -512,7 +481,7 @@ void APlayerCharacter::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (IInteractable* Interactable = Cast<IInteractable>(OtherActor))
-		Interactables.Add(Interactable);
+		OverlappingInteractables.Add(Interactable);
 
 	if (IAutoInteractable* AutoInteractable = Cast<IAutoInteractable>(OtherActor))
 		AutoInteractable->AutoInteract(this);
@@ -522,10 +491,10 @@ void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (IInteractable* Interactable = Cast<IInteractable>(OtherActor))
 	{
-		Interactables.Remove(Interactable);
-		if (Interactables.IsEmpty())
+		OverlappingInteractables.Remove(Interactable);
+		if (OverlappingInteractables.IsEmpty())
 		{
-			NearestInteractable = nullptr;
+			NearestAvailableInteractable = nullptr;
 			HUD->UpdateInteractionMessage("");
 		}
 	}
