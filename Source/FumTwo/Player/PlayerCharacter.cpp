@@ -3,12 +3,10 @@
 #include "PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "MainPlayerController.h"
 #include "PlayerHUD.h"
 #include "../Equipment/EquipmentComponent.h"
 #include "../Grenades/GrenadeComponent.h"
@@ -16,6 +14,7 @@
 #include "../Interfaces/AutoInteractable.h"
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
+#include "FumTwo/Interfaces/MainController.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -24,7 +23,6 @@ APlayerCharacter::APlayerCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->FieldOfView = FieldOfView;
 	Camera->SetupAttachment(GetCapsuleComponent());
 	Camera->SetRelativeLocation(FVector(-10.f, 0.f, 60.f));
 	Camera->bUsePawnControlRotation = true;
@@ -37,8 +35,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	MyController = Cast<AMainPlayerController>(Controller);
 	
 	CurrentWeapon = &PrimaryWeapon;
 
@@ -54,16 +50,19 @@ void APlayerCharacter::BeginPlay()
 		GrenadesComponent->RegisterComponent();
 	}
 
-	if (IsValid(MyController) && IsValid(HUDClass))
+	MyController = Cast<IMainController>(Controller);
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (IsValid(PlayerController) && IsValid(HUDClass))
 	{
-		HUD = CreateWidget<UPlayerHUD>(MyController, HUDClass);
+		HUD = CreateWidget<UPlayerHUD>(PlayerController, HUDClass);
 		HUD->AddToPlayerScreen();
 		UpdateWeapons();
 		UpdateEquipment();
 		UpdateGrenades();
 	}
 	else
-		UE_LOG(LogTemp, Error, TEXT("[APlayerCharacter::BeginPlay] MyController or HUD Class is invalid"));
+		UE_LOG(LogTemp, Error, TEXT("[APlayerCharacter::BeginPlay] Controller or HUD Class is invalid"));
 
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
@@ -104,7 +103,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
-		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		
 		EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -114,8 +112,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		
 		EnhancedInputComponent->BindAction(IA_Shoot, ETriggerEvent::Triggered, this, &APlayerCharacter::FireCurrentWeapon);
 		
-		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Triggered, this, &APlayerCharacter::StartZoomCurrentWeapon);
-		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Completed, this, &APlayerCharacter::EndZoomCurrentWeapon);
+		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Triggered, this, &APlayerCharacter::ZoomIn);
+		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Completed, this, &APlayerCharacter::ZoomOut);
 		
 		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &APlayerCharacter::ReloadCurrentWeapon);
 		
@@ -134,26 +132,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
-		AddMovementInput(Forward * MovementSpeed, MovementVector.X);
-		AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
-	}
-}
-
-void APlayerCharacter::Look(const FInputActionValue& Value)
-{
-	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		AddControllerYawInput(LookAxisVector.X * MyController->GetSensitivity());
-		AddControllerPitchInput(-LookAxisVector.Y * MyController->GetSensitivity());
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] m_MyController is invalid!"), *GetNameSafe(this));
+	const FVector Forward = FVector(Camera->GetComponentRotation().Vector().X, Camera->GetComponentRotation().Vector().Y, 0.0f);
+	AddMovementInput(Forward * MovementSpeed, MovementVector.X);
+	AddMovementInput(Camera->GetRightVector() * MovementSpeed, MovementVector.Y);
 }
 
 bool APlayerCharacter::CanJumpInternal_Implementation() const
@@ -252,7 +233,7 @@ void APlayerCharacter::ReloadCurrentWeapon()
 	UpdateWeapons();
 }
 
-void APlayerCharacter::StartZoomCurrentWeapon()
+void APlayerCharacter::ZoomIn()
 {
 	if (!CurrentWeapon || !*CurrentWeapon || !MyController)
 	{
@@ -260,16 +241,10 @@ void APlayerCharacter::StartZoomCurrentWeapon()
 		return;
 	}
 
-	if (const float ZoomFov = (*CurrentWeapon)->GetZoomFov(); ZoomFov > 0.0f)
-	{
-		Camera->FieldOfView = ZoomFov;
-		MyController->SetZoomSensitivity(FieldOfView, ZoomFov);
-	}
-	else
-		EndZoomCurrentWeapon();
+	MyController->ZoomIn((*CurrentWeapon)->GetZoomFov());
 }
 
-void APlayerCharacter::EndZoomCurrentWeapon()
+void APlayerCharacter::ZoomOut()
 {
 	if (!MyController)
 	{
@@ -277,8 +252,7 @@ void APlayerCharacter::EndZoomCurrentWeapon()
 		return;
 	}
 
-	Camera->FieldOfView = FieldOfView;
-	MyController->ResetSensitivity();
+	MyController->ResetZoom();
 }
 
 void APlayerCharacter::Interact()
@@ -489,7 +463,7 @@ void APlayerCharacter::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 
 void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (IInteractable* Interactable = Cast<IInteractable>(OtherActor))
+	if (auto Interactable = Cast<IInteractable>(OtherActor))
 	{
 		OverlappingInteractables.Remove(Interactable);
 		if (OverlappingInteractables.IsEmpty())
@@ -498,4 +472,26 @@ void APlayerCharacter::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 			HUD->UpdateInteractionMessage("");
 		}
 	}
+}
+
+const UInputMappingContext* APlayerCharacter::GetMappingContext() const
+{
+	return MappingContext;
+}
+
+void APlayerCharacter::OnEnterVehicle()
+{
+	if (auto Capsule = GetCapsuleComponent())
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void APlayerCharacter::OnExitVehicle()
+{
+	if (auto Capsule = GetCapsuleComponent())
+		Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+APawn* APlayerCharacter::GetPawn()
+{
+	return Cast<APawn>(this);
 }

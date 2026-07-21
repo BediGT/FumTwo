@@ -5,8 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "../Interfaces/Interactor.h"
+#include "FumTwo/Interfaces/Possessable.h"
+#include "FumTwo/Interfaces/Passenger.h"
 #include "PlayerCharacter.generated.h"
 
+class IMainController;
 class IAmmoSource;
 class AWeapon;
 class IInteractable;
@@ -15,7 +18,6 @@ struct FInputActionValue;
 
 class AEquipmentPickup;
 class UEquipmentComponent;
-class AMainPlayerController;
 class UCameraComponent;
 class UInputAction;
 class UPickupMappingManager;
@@ -25,26 +27,19 @@ class UInventoryComponent;
 class AGrenade;
 
 UCLASS()
-class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
+class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable, public IPassenger
 {
 	GENERATED_BODY()
 
-	//Controller
-	UPROPERTY()
-	AMainPlayerController* MyController = nullptr;
+	 IMainController* MyController = nullptr;
 
 	// Camera
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCameraComponent* Camera = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	float FieldOfView = 98.0f;
-
 	// Input actions
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Move = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* IA_Look = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Jump = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -79,9 +74,6 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
 	UPlayerHUD* HUD = nullptr;
 
 	// Weapons
-	// UPROPERTY(EditAnywhere, Category = "DefaultWepaonClass")
-	// TSubclassOf<AWeapon> DefaultWeaponClass = nullptr;
-	
 	UPROPERTY(EditAnywhere, Category = "Weapons")
 	AWeapon* PrimaryWeapon = nullptr;
 
@@ -107,6 +99,10 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
 	TArray<IInteractable*> OverlappingInteractables{};
 
 	IInteractable* NearestAvailableInteractable = nullptr;
+
+	// Possessable
+	UPROPERTY(EditAnywhere, Category = "Input Mapping Context")
+	UInputMappingContext* MappingContext = nullptr;
 
 public:
 	APlayerCharacter();
@@ -134,14 +130,13 @@ protected:
 	void AddAmmoToWeapons(IAmmoSource* AmmoSource) const;
 public:
 	void ReloadCurrentWeapon();
-	void StartZoomCurrentWeapon();
-	void EndZoomCurrentWeapon();
+	void ZoomIn();
+	void ZoomOut();
 	void Interact();
 	void ChangeCurrentWeapon();
 	void DetachCurrentWeapon() const;
 	void AttachWeapon(AWeapon* Weapon);
 	AWeapon** GetOtherWeapon();
-	
 
 	// Grenades
 	void ThrowGrenade();
@@ -168,5 +163,12 @@ public:
 						int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	
+
+	//Possessable
+	virtual const UInputMappingContext* GetMappingContext() const override;
+
+	// Passenger
+	virtual void OnEnterVehicle() override;
+	virtual void OnExitVehicle() override;
+	virtual APawn* GetPawn() override;
 };
