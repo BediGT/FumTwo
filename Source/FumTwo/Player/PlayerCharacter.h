@@ -7,6 +7,8 @@
 #include "../Interfaces/Interactor.h"
 #include "FumTwo/Interfaces/Possessable.h"
 #include "FumTwo/Interfaces/Passenger.h"
+#include <Containers/Array.h>
+#include <UObject/WeakInterfacePtr.h>
 #include "PlayerCharacter.generated.h"
 
 class IMainController;
@@ -15,7 +17,6 @@ class AWeapon;
 class IInteractable;
 class UGrenadesComponent;
 struct FInputActionValue;
-
 class AEquipmentPickup;
 class UEquipmentComponent;
 class UCameraComponent;
@@ -25,6 +26,9 @@ class APickup;
 class UPlayerHUD;
 class UInventoryComponent;
 class AGrenade;
+class APawn;
+class UInputMappingContext;
+class UInputComponent;
 
 UCLASS()
 class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable, public IPassenger
@@ -96,9 +100,8 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 	UPROPERTY()
 	UGrenadesComponent* GrenadesComponent = nullptr;
 
-	TArray<IInteractable*> OverlappingInteractables{};
-
-	IInteractable* NearestAvailableInteractable = nullptr;
+	TArray<TWeakInterfacePtr<IInteractable>> Interactables{};
+	TWeakInterfacePtr<IInteractable> InteractionTarget = nullptr;
 
 	// Possessable
 	UPROPERTY(EditAnywhere, Category = "Input Mapping Context")
@@ -109,16 +112,16 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void UpdateNearestInteractable();
 
 public:	
 	virtual void Tick(float DeltaTime) override;
 
 	// Input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	// Movement
 	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
 	virtual bool CanJumpInternal_Implementation() const override;
 	void StartCrouch();
 	void EndCrouch();
