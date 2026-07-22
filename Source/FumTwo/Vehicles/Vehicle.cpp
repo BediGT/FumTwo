@@ -105,7 +105,7 @@ void AVehicle::Interact(AActor* Interactor)
 	if (Passenger)
 	{
 		Passenger->OnEnterVehicle();
-		Interactor->AttachToActor(this, { EAttachmentRule::KeepRelative, true });
+		Interactor->AttachToActor(this, { EAttachmentRule::KeepWorld, true });
 	}
 }
 
