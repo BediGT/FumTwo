@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "FumTwo/Interfaces/Interactable.h"
 #include "FumTwo/Interfaces/Possessable.h"
 #include "FumTwo/Interfaces/Passenger.h"

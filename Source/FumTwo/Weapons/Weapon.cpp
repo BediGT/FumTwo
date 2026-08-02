@@ -3,8 +3,6 @@
 #include "Weapon.h"
 #include "Projectile.h"
 #include "../Interfaces/Interactor.h"
-
-#include "Sound/SoundWave.h"
 #include "Kismet/GameplayStatics.h"
 #include "../DataAssets/WeaponDA.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -35,14 +33,6 @@ void AWeapon::BeginPlay()
 	MaxAmmo = WeaponData->MagazineSize + WeaponData->AmmunitionSize;
 }
 
-FRotator AWeapon::GetSpreadRotator() const
-{
-	if (WeaponData->Spread > 0.0)
-		return {FMath::RandRange(-WeaponData->Spread, WeaponData->Spread), FMath::RandRange(-WeaponData->Spread, WeaponData->Spread), 0.0f };
-
-	return FRotator(0.0);
-}
-
 bool AWeapon::CanFire() const
 {
 	const double ThisShot = UGameplayStatics::GetTimeSeconds(this);
@@ -54,20 +44,20 @@ void AWeapon::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AWeapon::Fire(const FTransform& TransformationParameters)
+void AWeapon::Fire(const FVector& Direction, const FVector& Location)
 {
-	if (ProjectileClass != nullptr && CanFire())
+	if (ProjectileClass && CanFire())
 	{
-		if (UWorld* const World = GetWorld())
+		if (const auto World = GetWorld())
 		{
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			const FRotator Rotation = FMath::VRandCone(Direction, FMath::DegreesToRadians(WeaponData->Spread)).Rotation();
 			
 			for (int32 i = 0; i < WeaponData->Pelets; ++i)
 			{
-				AProjectile* Projectile = World->SpawnActor<AProjectile>(
-					ProjectileClass, TransformationParameters.GetLocation(),FRotator(TransformationParameters.GetRotation()) + GetSpreadRotator(), ActorSpawnParams);
-
+				const auto Projectile = World->SpawnActor<AProjectile>(ProjectileClass, Location, Rotation, ActorSpawnParams);
 				Projectile->SetDamageDA(WeaponData->DamageDA);
 			}
 			
@@ -75,7 +65,7 @@ void AWeapon::Fire(const FTransform& TransformationParameters)
 			LastShot = UGameplayStatics::GetTimeSeconds(this);
 			
 			if (WeaponData->Sound)
-				UGameplayStatics::PlaySoundAtLocation(this, WeaponData->Sound, TransformationParameters.GetLocation());
+				UGameplayStatics::PlaySoundAtLocation(this, WeaponData->Sound, Location);
 		}
 	}
 }

@@ -27,7 +27,7 @@ class FUMTWO_API AWeapon : public AActor, public IInteractable, public IAmmoSour
 	TSubclassOf<AProjectile> ProjectileClass = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	UWeaponDA* WeaponData = nullptr;
+	TObjectPtr<UWeaponDA> WeaponData = nullptr;
 
 	int32 MagAtTheMoment = 1;
 	int32 AmmoAtTheMoment = 1;
@@ -45,13 +45,12 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	FRotator GetSpreadRotator() const;
 	bool CanFire() const;
 
 public:
 	virtual void Tick(float DeltaTime) override;
 	
-	void Fire(const FTransform& TransformationParameters);
+	void Fire(const FVector& Direction, const FVector& Location);
 	void Reload();
 
 	void OnAttachment();

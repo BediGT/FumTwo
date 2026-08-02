@@ -9,11 +9,12 @@
 #include "FumTwo/Interfaces/Passenger.h"
 #include <Containers/Array.h>
 #include <UObject/WeakInterfacePtr.h>
+#include <UObject/ObjectPtr.h>
 #include "PlayerCharacter.generated.h"
 
 class IMainController;
 class IAmmoSource;
-class AWeapon;
+class UWeaponManagerComponent;
 class IInteractable;
 class UGrenadesComponent;
 struct FInputActionValue;
@@ -77,14 +78,8 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 	UPROPERTY()
 	UPlayerHUD* HUD = nullptr;
 
-	// Weapons
-	UPROPERTY(EditAnywhere, Category = "Weapons")
-	AWeapon* PrimaryWeapon = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Weapons")
-	AWeapon* SecondaryWeapon = nullptr;
-
-	AWeapon** CurrentWeapon = nullptr;
+	UPROPERTY()
+	TObjectPtr <UWeaponManagerComponent> WeaponManager = nullptr;
 
 	// Equipment
 	UPROPERTY(EditAnywhere, Category = "Equipment")
@@ -127,19 +122,14 @@ public:
 	void EndCrouch();
 
 	// Weapons
-	void FireCurrentWeapon();
-protected:
-	bool WeaponsNeedAmmo() const;
-	void AddAmmoToWeapons(IAmmoSource* AmmoSource) const;
+	void OnShoot();
+
 public:
 	void ReloadCurrentWeapon();
 	void ZoomIn();
 	void ZoomOut();
 	void Interact();
-	void ChangeCurrentWeapon();
-	void DetachCurrentWeapon() const;
-	void AttachWeapon(AWeapon* Weapon);
-	AWeapon** GetOtherWeapon();
+	void SwitchCurrentWeapon();
 
 	// Grenades
 	void ThrowGrenade();
