@@ -41,6 +41,7 @@
 #include <FumTwo/Enums/EnumEquipmentType.h>
 #include <FumTwo/Enums/EnumWeaponTypes.h>
 #include <FumTwo/Interfaces/AmmoSource.h>
+#include <FumTwo/Components/WeaponManagerComponent.h>
 #include <Math/UnrealMathUtility.h>
 #include <UObject/WeakInterfacePtr.h>
 
@@ -58,13 +59,13 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 	GetCharacterMovement()->JumpZVelocity = JumpHeight;
 	ACharacter::GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+	WeaponManager = CreateDefaultSubobject<UWeaponManagerComponent>(TEXT("Weapon Manager"));
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	CurrentWeapon = &PrimaryWeapon;
 
 	if (EquipmentComponentClass)
 	{
@@ -146,7 +147,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &APlayerCharacter::StartCrouch);
 		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Completed, this, &APlayerCharacter::EndCrouch);
 		
-		EnhancedInputComponent->BindAction(IA_Shoot, ETriggerEvent::Triggered, this, &APlayerCharacter::FireCurrentWeapon);
+		EnhancedInputComponent->BindAction(IA_Shoot, ETriggerEvent::Triggered, this, &APlayerCharacter::OnShoot);
 		
 		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Triggered, this, &APlayerCharacter::ZoomIn);
 		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Completed, this, &APlayerCharacter::ZoomOut);
@@ -155,7 +156,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		
 		EnhancedInputComponent->BindAction(IA_Interact, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 		
-		EnhancedInputComponent->BindAction(IA_ChangeWeapon, ETriggerEvent::Started, this, &APlayerCharacter::ChangeCurrentWeapon);
+		EnhancedInputComponent->BindAction(IA_ChangeWeapon, ETriggerEvent::Started, this, &APlayerCharacter::SwitchCurrentWeapon);
 		
 		EnhancedInputComponent->BindAction(IA_ThrowGrenade, ETriggerEvent::Started, this, &APlayerCharacter::ThrowGrenade);
 		
@@ -208,87 +209,34 @@ void APlayerCharacter::EndCrouch()
 	UnCrouch(false);
 }
 
-void APlayerCharacter::FireCurrentWeapon()
+void APlayerCharacter::OnShoot()
 {
-	if (CurrentWeapon && *CurrentWeapon)
+	if (Camera && WeaponManager)
 	{
-		(*CurrentWeapon)->Fire(Camera->GetComponentTransform());
+		WeaponManager->FireCurrentWeapon(Camera->GetForwardVector(), Camera->GetComponentLocation());
 		UpdateWeapons();
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] Current weapon is invalid!"), *GetNameSafe(this));
-}
-
-bool APlayerCharacter::WeaponsNeedAmmo() const
-{
-	return (PrimaryWeapon && PrimaryWeapon->GetMissingAmmo() > 0) || (SecondaryWeapon && SecondaryWeapon->GetMissingAmmo() > 0);
-}
-
-void APlayerCharacter::AddAmmoToWeapons(IAmmoSource* AmmoSource) const
-{
-	if (PrimaryWeapon)
-	{
-		const int32 MissingAmmo = PrimaryWeapon->GetMissingAmmo();
-		if (MissingAmmo > 0 && AmmoSource->CheckAmmoType(PrimaryWeapon->GetWeaponType()))
-			PrimaryWeapon->AddAmmo(AmmoSource->GetAvailableAmmo(MissingAmmo));
-	}
-	
-	if (SecondaryWeapon)
-	{
-		const int32 MissingAmmo = SecondaryWeapon->GetMissingAmmo();
-		if (MissingAmmo > 0 && AmmoSource->CheckAmmoType(SecondaryWeapon->GetWeaponType()))
-			SecondaryWeapon->AddAmmo(AmmoSource->GetAvailableAmmo(MissingAmmo));
 	}
 }
 
 void APlayerCharacter::ReloadCurrentWeapon()
 {
-	if (!CurrentWeapon || !*CurrentWeapon)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] Current weapon is invalid!"), *GetNameSafe(this));
+	if (!WeaponManager)
 		return;
-	}
 
-	(*CurrentWeapon)->Reload();
-
-	if (WeaponsNeedAmmo())
-	{
-		TArray<AActor*> OverlappingActors;
-		GetOverlappingActors(OverlappingActors);
-		for (AActor* Actor : OverlappingActors)
-		{
-			if (IAmmoSource* AmmoSource = Cast<IAmmoSource>(Actor))
-			{
-				AddAmmoToWeapons(AmmoSource);
-				if (!WeaponsNeedAmmo())
-					break;
-			}
-		}
-	}
-		
+	WeaponManager->ReloadCurrentWeapon();
 	UpdateWeapons();
 }
 
 void APlayerCharacter::ZoomIn()
 {
-	if (!CurrentWeapon || !*CurrentWeapon || !MyController)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] Inventory or Controller is invalid!"), *GetNameSafe(this));
-		return;
-	}
-
-	MyController->ZoomIn((*CurrentWeapon)->GetZoomFov());
+	if (MyController && WeaponManager)
+		MyController->ZoomIn(WeaponManager->GetCurrentWeaponZoomFov());
 }
 
 void APlayerCharacter::ZoomOut()
 {
-	if (!MyController)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] Controller is invalid!"), *GetNameSafe(this));
-		return;
-	}
-
-	MyController->ResetZoom();
+	if (MyController)
+		MyController->ResetZoom();
 }
 
 void APlayerCharacter::Interact()
@@ -297,62 +245,13 @@ void APlayerCharacter::Interact()
 		InteractionTarget->Interact(this);
 }
 
-void APlayerCharacter::ChangeCurrentWeapon()
+void APlayerCharacter::SwitchCurrentWeapon()
 {
-	if (!PrimaryWeapon || !SecondaryWeapon)
+	if (WeaponManager)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] PrimaryWeapon or SecondaryWeapon is invalid!"), *GetNameSafe(this));
-		return;
-	}
-
-	if (AWeapon** Weapon = GetOtherWeapon())
-	{
-		CurrentWeapon = Weapon;
+		WeaponManager->SwitchCurrentWeapon();
 		UpdateWeapons();
 	}
-}
-
-void APlayerCharacter::DetachCurrentWeapon() const
-{
-	if (AWeapon* Weapon = *CurrentWeapon)
-	{
-		const FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
-
-		Weapon->DetachFromActor(DetachmentRules);
-		Weapon->SetOwner(nullptr);
-		Weapon->OnDetachment();
-
-		*CurrentWeapon = nullptr;
-	}
-}
-
-void APlayerCharacter::AttachWeapon(AWeapon* Weapon)
-{
-	if (!Weapon)
-		return;
-	
-	const FAttachmentTransformRules AttachmentRules(
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::KeepWorld,
-		true);
-	
-	Weapon->AttachToComponent(GetCapsuleComponent(), AttachmentRules);
-	Weapon->SetOwner(this);
-	Weapon->OnAttachment();
-	
-	*CurrentWeapon = Weapon;
-}
-
-AWeapon** APlayerCharacter::GetOtherWeapon()
-{
-	if (*CurrentWeapon == PrimaryWeapon)
-		return &SecondaryWeapon;
-
-	if (*CurrentWeapon == SecondaryWeapon)
-		return &PrimaryWeapon;
-
-	return nullptr;
 }
 
 void APlayerCharacter::ThrowGrenade()
@@ -390,17 +289,17 @@ void APlayerCharacter::UpdateWeapons()
 		return;
 	}
 
-	if (CurrentWeapon && *CurrentWeapon)
+	if (!WeaponManager)
 	{
-		const AWeapon* Weapon = *CurrentWeapon;
-		HUD->UpdateCurrentWeapon(Weapon->GetMagAtTheMoment(), Weapon->GetAmmoAtTheMoment(), Weapon->GetWeaponTypeFString(), Weapon->GetReticle());
+		UE_LOG(LogTemp, Error, TEXT("[%s] WeaponManager is invalid!"), *GetNameSafe(this));
+		return;
 	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] Current weapon is invalid!"), *GetNameSafe(this));
 
-	AWeapon** OtherWeapon = GetOtherWeapon();
-	if (OtherWeapon && *OtherWeapon)
-		HUD->UpdateOtherWeapon((*OtherWeapon)->GetWeaponTypeFString());
+	if (const auto CurrentWeapon = WeaponManager->GetCurrentWeapon())
+		HUD->UpdateCurrentWeapon(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment(), CurrentWeapon->GetWeaponTypeFString(), CurrentWeapon->GetReticle());
+
+	if (const auto OtherWeapon = WeaponManager->GetOtherWeapon())
+		HUD->UpdateOtherWeapon(OtherWeapon->GetWeaponTypeFString());
 }
 
 void APlayerCharacter::UpdateGrenades() const
@@ -425,15 +324,10 @@ void APlayerCharacter::UpdateEquipment() const
 
 void APlayerCharacter::InteractWithWeapon(AActor* Weapon)
 {
-	if (AWeapon* NewWeapon = Cast<AWeapon>(Weapon))
+	const auto NewWeapon = Cast<AWeapon>(Weapon);
+	if (NewWeapon && WeaponManager)
 	{
-		AWeapon** NotCurrentWeapon = GetOtherWeapon();
-		if (*CurrentWeapon && NotCurrentWeapon && !*NotCurrentWeapon)
-			CurrentWeapon = NotCurrentWeapon;
-		
-		DetachCurrentWeapon();
-		AttachWeapon(NewWeapon);
-
+		WeaponManager->SwapCurrentWeapon(NewWeapon);
 		UpdateWeapons();
 	}
 }
@@ -457,22 +351,20 @@ void APlayerCharacter::InteractWithEquipment(const TSubclassOf<UEquipmentCompone
 
 void APlayerCharacter::InteractWithAmmoSource(AActor* AmmoSource)
 {
-	if (IAmmoSource* Ammo = Cast<IAmmoSource>(AmmoSource))
+	const auto Ammo = Cast<IAmmoSource>(AmmoSource);
+	if (Ammo && WeaponManager)
 	{
-		AddAmmoToWeapons(Ammo);
+		WeaponManager->ReplenishAmmo(Ammo);
 		UpdateWeapons();
 	}
 }
 
 bool APlayerCharacter::CanPickUpWeapon(const EWeaponType WeaponToPickUpType)
 {
-	if (PrimaryWeapon && WeaponToPickUpType == PrimaryWeapon->GetWeaponType())
-		return false;
+	if (WeaponManager)
+		return !WeaponManager->IsWeaponTypeInLoadout(WeaponToPickUpType);
 
-	if (SecondaryWeapon && WeaponToPickUpType == SecondaryWeapon->GetWeaponType())
-		return false;
-
-	return true;
+	return false;
 }
 
 bool APlayerCharacter::CanPickUpEquipment(const EEquipmentType EquipmentToPickUpType)
