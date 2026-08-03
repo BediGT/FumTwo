@@ -13,8 +13,8 @@ void UWeaponManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	TryInitWeapon(PrimaryWeapon, PrimaryWeaponClass);
-	TryInitWeapon(SecondaryWeapon, SecondaryWeaponClass);
+	InitWeapon(PrimaryWeapon, PrimaryWeaponClass);
+	InitWeapon(SecondaryWeapon, SecondaryWeaponClass);
 }
 
 void UWeaponManagerComponent::FireCurrentWeapon(const FVector& Direction, const FVector& Location)
@@ -48,13 +48,22 @@ float UWeaponManagerComponent::GetCurrentWeaponZoomFov() const
 
 void UWeaponManagerComponent::SwitchCurrentWeapon()
 {
-	if (auto OtherWeapon = GetOtherWeapon())
-		CurrentWeaponReference = OtherWeapon;
+	const auto OtherWeaponReference = GetOtherWeaponReference();
+	if (OtherWeaponReference && *OtherWeaponReference)
+		CurrentWeaponReference = GetOtherWeaponReference();
 }
 
 const AWeapon* UWeaponManagerComponent::GetCurrentWeapon() const
 {
 	return *CurrentWeaponReference;
+}
+
+const AWeapon* UWeaponManagerComponent::GetOtherWeapon()
+{
+	if (const auto OtherWeapon = GetOtherWeaponReference())
+		return *OtherWeapon;
+
+	return nullptr;
 }
 
 void UWeaponManagerComponent::SwapCurrentWeapon(AWeapon* Weapon)
@@ -117,7 +126,7 @@ void UWeaponManagerComponent::SearchOverlapsForAmmo()
 	}
 }
 
-TObjectPtr<AWeapon>* UWeaponManagerComponent::GetOtherWeapon()
+TObjectPtr<AWeapon>* UWeaponManagerComponent::GetOtherWeaponReference()
 {
 	return *CurrentWeaponReference == PrimaryWeapon ? &SecondaryWeapon : &PrimaryWeapon;
 }
@@ -155,9 +164,9 @@ bool UWeaponManagerComponent::TryAttachWeapon(AWeapon* Weapon)
 	return false;
 }
 
-void UWeaponManagerComponent::TryInitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassOf<AWeapon> WeaponClass)
+void UWeaponManagerComponent::InitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassOf<AWeapon> WeaponClass)
 {
-	if (Weapon || !WeaponClass) // Function can be used only to init weapons at the start, not to change them
+	if (Weapon || !WeaponClass) // Function can be used only to init weapons at the start, not in other way
 		return;
 
 	const auto World = GetWorld();
@@ -165,7 +174,7 @@ void UWeaponManagerComponent::TryInitWeapon(TObjectPtr<AWeapon>& Weapon, TSubcla
 		return;
 
 	FActorSpawnParameters ActorSpawnParams;
-	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	Weapon = World->SpawnActor<AWeapon>(WeaponClass, ActorSpawnParams);
+	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	Weapon = World->SpawnActor<AWeapon>(WeaponClass, ActorSpawnParams); // It is spawning but in player, it works but should be done better
 	TryAttachWeapon(Weapon);
 }

@@ -78,7 +78,7 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 	UPROPERTY()
 	UPlayerHUD* HUD = nullptr;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	TObjectPtr <UWeaponManagerComponent> WeaponManager = nullptr;
 
 	// Equipment

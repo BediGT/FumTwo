@@ -7,7 +7,7 @@
 class AWeapon;
 class IAmmoSource;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(meta=(BlueprintSpawnableComponent))
 class FUMTWO_API UWeaponManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -39,6 +39,7 @@ public:
 	float GetCurrentWeaponZoomFov() const;
 	void SwitchCurrentWeapon();
 	const AWeapon* GetCurrentWeapon() const;
+	const AWeapon* GetOtherWeapon();
 	void SwapCurrentWeapon(AWeapon* Weapon);
 	bool IsWeaponTypeInLoadout(EWeaponType WeaponType) const;
 
@@ -46,8 +47,8 @@ private:
 	bool WeaponsNeedAmmo() const;
 	void ReplenishAmmo(IAmmoSource* AmmoSource, TObjectPtr<AWeapon>& Weapon);
 	void SearchOverlapsForAmmo();
-	TObjectPtr<AWeapon>* GetOtherWeapon();
+	TObjectPtr<AWeapon>* GetOtherWeaponReference();
 	void DetachWeapon(TObjectPtr<AWeapon>& Weapon);
 	bool TryAttachWeapon(AWeapon* Weapon);
-	void TryInitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassOf<AWeapon> WeaponClass);
+	void InitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassOf<AWeapon> WeaponClass);
 };

@@ -212,7 +212,10 @@ void APlayerCharacter::EndCrouch()
 void APlayerCharacter::OnShoot()
 {
 	if (Camera && WeaponManager)
+	{
 		WeaponManager->FireCurrentWeapon(Camera->GetForwardVector(), Camera->GetComponentLocation());
+		UpdateWeapons();
+	}
 }
 
 void APlayerCharacter::ReloadCurrentWeapon()
@@ -245,7 +248,10 @@ void APlayerCharacter::Interact()
 void APlayerCharacter::SwitchCurrentWeapon()
 {
 	if (WeaponManager)
+	{
 		WeaponManager->SwitchCurrentWeapon();
+		UpdateWeapons();
+	}
 }
 
 void APlayerCharacter::ThrowGrenade()
@@ -277,23 +283,23 @@ void APlayerCharacter::UseEquipment()
 
 void APlayerCharacter::UpdateWeapons()
 {
-	/*if (!IsValid(HUD))
+	if (!IsValid(HUD))
 	{
 		UE_LOG(LogTemp, Error, TEXT("[%s] HUD is invalid!"), *GetNameSafe(this));
 		return;
 	}
 
-	if (CurrentWeapon && *CurrentWeapon)
+	if (!WeaponManager)
 	{
-		const AWeapon* Weapon = *CurrentWeapon;
-		HUD->UpdateCurrentWeapon(Weapon->GetMagAtTheMoment(), Weapon->GetAmmoAtTheMoment(), Weapon->GetWeaponTypeFString(), Weapon->GetReticle());
+		UE_LOG(LogTemp, Error, TEXT("[%s] WeaponManager is invalid!"), *GetNameSafe(this));
+		return;
 	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] Current weapon is invalid!"), *GetNameSafe(this));
 
-	AWeapon** OtherWeapon = GetOtherWeapon();
-	if (OtherWeapon && *OtherWeapon)
-		HUD->UpdateOtherWeapon((*OtherWeapon)->GetWeaponTypeFString());*/
+	if (const auto CurrentWeapon = WeaponManager->GetCurrentWeapon())
+		HUD->UpdateCurrentWeapon(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment(), CurrentWeapon->GetWeaponTypeFString(), CurrentWeapon->GetReticle());
+
+	if (const auto OtherWeapon = WeaponManager->GetOtherWeapon())
+		HUD->UpdateOtherWeapon(OtherWeapon->GetWeaponTypeFString());
 }
 
 void APlayerCharacter::UpdateGrenades() const
