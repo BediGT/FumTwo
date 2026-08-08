@@ -12,6 +12,7 @@ class UInputAction;
 struct FInputActionValue;
 class UUserWidget;
 class UInputMappingContext;
+class UPlayerHUD;
 
 UCLASS()
 class FUMTWO_API AMainPlayerController : public APlayerController, public IMainController
@@ -27,15 +28,25 @@ class FUMTWO_API AMainPlayerController : public APlayerController, public IMainC
 	double DefaultSensitivity = 0.253994f;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputMappingContext* IMC_DefaultMappingContext = nullptr; 
+	TObjectPtr<UInputMappingContext> IMC_DefaultMappingContext = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* IA_Look = nullptr;
+	TObjectPtr<UInputAction> IA_Look = nullptr;
 
-	IPossessable* LastPossessedPawn = nullptr;
+	// Head Up Display
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<UPlayerHUD> HUDClass = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UPlayerHUD> HUD = nullptr;
+
+public:
+	AMainPlayerController();
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupInputComponent() override;
 	void Look(const FInputActionValue& Value);

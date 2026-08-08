@@ -24,7 +24,6 @@ class UCameraComponent;
 class UInputAction;
 class UPickupMappingManager;
 class APickup;
-class UPlayerHUD;
 class UInventoryComponent;
 class AGrenade;
 class APawn;
@@ -70,13 +69,6 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float JumpHeight = 600.0f;
-	
-	// Head Up Display
-	UPROPERTY(EditAnywhere, Category = "HUD")
-	TSubclassOf<UPlayerHUD> HUDClass = nullptr;
-
-	UPROPERTY()
-	UPlayerHUD* HUD = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr <UWeaponManagerComponent> WeaponManager = nullptr;

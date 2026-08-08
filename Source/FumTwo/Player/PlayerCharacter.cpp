@@ -6,8 +6,6 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Blueprint/UserWidget.h"
-#include "PlayerHUD.h"
 #include "../Equipment/EquipmentComponent.h"
 #include "../Grenades/GrenadeComponent.h"
 #include "../Interfaces/Interactable.h"
@@ -15,35 +13,9 @@
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
 #include "FumTwo/Interfaces/MainController.h"
-#include <EnhancedPlayerInput.h>
-#include <InputTriggers.h>
-#include <Templates/Casts.h>
-#include <Templates/SubclassOf.h>
-#include <UObject/Object.h>
-#include <UObject/UObjectBaseUtility.h>
-#include <UObject/UObjectGlobals.h>
-#include <Containers/Array.h>
-#include <CoreGlobals.h>
-#include <Delegates/Delegate.h>
-#include <GenericPlatform/GenericPlatformMisc.h>
-#include <HAL/Platform.h>
-#include <Logging/LogMacros.h>
-#include <Math/MathFwd.h>
-#include <Components/InputComponent.h>
-#include <Components/PrimitiveComponent.h>
-#include <Engine/EngineTypes.h>
-#include <Engine/HitResult.h>
-#include <Engine/World.h>
-#include <GameFramework/Actor.h>
-#include <GameFramework/Character.h>
-#include <GameFramework/Pawn.h>
-#include <GameFramework/PlayerController.h>
-#include <FumTwo/Enums/EnumEquipmentType.h>
-#include <FumTwo/Enums/EnumWeaponTypes.h>
 #include <FumTwo/Interfaces/AmmoSource.h>
 #include <FumTwo/Components/WeaponManagerComponent.h>
 #include <Math/UnrealMathUtility.h>
-#include <UObject/WeakInterfacePtr.h>
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -81,7 +53,7 @@ void APlayerCharacter::BeginPlay()
 
 	MyController = Cast<IMainController>(Controller);
 
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	/*APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (IsValid(PlayerController) && IsValid(HUDClass))
 	{
 		HUD = CreateWidget<UPlayerHUD>(PlayerController, HUDClass);
@@ -91,9 +63,9 @@ void APlayerCharacter::BeginPlay()
 		UpdateGrenades();
 	}
 	else
-		UE_LOG(LogTemp, Error, TEXT("[APlayerCharacter::BeginPlay] Controller or HUD Class is invalid"));
+		UE_LOG(LogTemp, Error, TEXT("[APlayerCharacter::BeginPlay] Controller or HUD Class is invalid"));*/
 
-	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	if (const auto Capsule = GetCapsuleComponent())
 	{
 		Capsule->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnBeginOverlap);
 		Capsule->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnEndOverlap);
@@ -122,7 +94,7 @@ void APlayerCharacter::UpdateNearestInteractable()
 	if (NewInteractable != InteractionTarget)
 	{
 		InteractionTarget = NewInteractable;
-		HUD->UpdateInteractionMessage(InteractionTarget.IsValid() ? InteractionTarget->GetInteractionMessage() : L"");
+		//HUD->UpdateInteractionMessage(InteractionTarget.IsValid() ? InteractionTarget->GetInteractionMessage() : L"");
 	}
 }
 
@@ -283,7 +255,7 @@ void APlayerCharacter::UseEquipment()
 
 void APlayerCharacter::UpdateWeapons()
 {
-	if (!IsValid(HUD))
+	/*if (!IsValid(HUD))
 	{
 		UE_LOG(LogTemp, Error, TEXT("[%s] HUD is invalid!"), *GetNameSafe(this));
 		return;
@@ -299,27 +271,27 @@ void APlayerCharacter::UpdateWeapons()
 		HUD->UpdateCurrentWeapon(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment(), CurrentWeapon->GetWeaponTypeFString(), CurrentWeapon->GetReticle());
 
 	if (const auto OtherWeapon = WeaponManager->GetOtherWeapon())
-		HUD->UpdateOtherWeapon(OtherWeapon->GetWeaponTypeFString());
+		HUD->UpdateOtherWeapon(OtherWeapon->GetWeaponTypeFString());*/
 }
 
 void APlayerCharacter::UpdateGrenades() const
 {
-	if (IsValid(HUD) && GrenadesComponent)
-	{
-		HUD->UpdateGrenades(GrenadesComponent->GetGrenades());
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or grenade component is invalid!"), *GetNameSafe(this));
+	//if (IsValid(HUD) && GrenadesComponent)
+	//{
+	//	HUD->UpdateGrenades(GrenadesComponent->GetGrenades());
+	//}
+	//else
+	//	UE_LOG(LogTemp, Error, TEXT("[%s] HUD or grenade component is invalid!"), *GetNameSafe(this));
 }
 
 void APlayerCharacter::UpdateEquipment() const
 {
-	if (IsValid(HUD) && EquipmentComponent)
+	/*if (IsValid(HUD) && EquipmentComponent)
 	{
 		HUD->UpdateEquipmentIcon(EquipmentComponent->GetIcon());
 	}
 	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or equipment component is invalid!"), *GetNameSafe(this))
+		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or equipment component is invalid!"), *GetNameSafe(this))*/
 }
 
 void APlayerCharacter::InteractWithWeapon(AActor* Weapon)
