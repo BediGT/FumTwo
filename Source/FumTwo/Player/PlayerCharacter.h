@@ -12,30 +12,25 @@
 #include <UObject/ObjectPtr.h>
 #include "PlayerCharacter.generated.h"
 
-class IMainController;
-class IAmmoSource;
+struct FInputActionValue;
+
 class UWeaponManagerComponent;
 class IInteractable;
 class UGrenadesComponent;
-struct FInputActionValue;
 class AEquipmentPickup;
 class UEquipmentComponent;
 class UCameraComponent;
 class UInputAction;
-class UPickupMappingManager;
-class APickup;
-class UInventoryComponent;
-class AGrenade;
-class APawn;
 class UInputMappingContext;
 class UInputComponent;
+
+DECLARE_DELEGATE_OneParam(FOnInteractableChangedDelegate, /*NewInteractionMessage*/ const FString&);
+DECLARE_DELEGATE_OneParam(FOnEquipmentChangedDelegate, /*NewEquipmentIcon*/ UTexture2D*);
 
 UCLASS()
 class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable, public IPassenger
 {
 	GENERATED_BODY()
-
-	 IMainController* MyController = nullptr;
 
 	// Camera
 	UPROPERTY(EditAnywhere, Category = "Camera")
@@ -94,45 +89,36 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, publi
 	UPROPERTY(EditAnywhere, Category = "Input Mapping Context")
 	UInputMappingContext* MappingContext = nullptr;
 
+
 public:
+	FOnInteractableChangedDelegate OnInteractableChangedDelegate{};
+	FOnEquipmentChangedDelegate OnEquipmentChangedDelegate{};
+
 	APlayerCharacter();
 
 protected:
 	virtual void BeginPlay() override;
 	void UpdateNearestInteractable();
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
-
-	// Input
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	// Movement
 	void Move(const FInputActionValue& Value);
 	virtual bool CanJumpInternal_Implementation() const override;
 	void StartCrouch();
 	void EndCrouch();
 
-	// Weapons
 	void OnShoot();
-
-public:
 	void ReloadCurrentWeapon();
 	void ZoomIn();
 	void ZoomOut();
 	void Interact();
 	void SwitchCurrentWeapon();
 
-	// Grenades
 	void ThrowGrenade();
 
-	//Equipment
 	void UseEquipment();
-
-	// Head Up Display
-	void UpdateWeapons();
-	void UpdateGrenades() const;
-	void UpdateEquipment() const;
 
 	// Interactor
 	virtual void InteractWithWeapon(AActor* Weapon) override;

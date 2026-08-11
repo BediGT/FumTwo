@@ -14,13 +14,28 @@ void UWeaponManagerComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	InitWeapon(PrimaryWeapon, PrimaryWeaponClass);
+	if (PrimaryWeapon)
+	{
+		OnCurrentWeaponChangedDelegate.ExecuteIfBound(
+			PrimaryWeapon->GetMagAtTheMoment(),
+			PrimaryWeapon->GetAmmoAtTheMoment(),
+			PrimaryWeapon->GetWeaponTypeFString(),
+			PrimaryWeapon->GetReticle()
+		);
+	}
+	
 	InitWeapon(SecondaryWeapon, SecondaryWeaponClass);
+	if (SecondaryWeapon)
+		OnOtherWeaponChangedDelegate.ExecuteIfBound(SecondaryWeapon->GetWeaponTypeFString());
 }
 
 void UWeaponManagerComponent::FireCurrentWeapon(const FVector& Direction, const FVector& Location)
 {
 	if (const auto& CurrentWeapon = *CurrentWeaponReference)
+	{
 		CurrentWeapon->Fire(Direction, Location);
+		OnShootDelegate.ExecuteIfBound(CurrentWeapon->GetMagAtTheMoment());
+	}
 }
 
 void UWeaponManagerComponent::ReloadCurrentWeapon()
@@ -29,6 +44,7 @@ void UWeaponManagerComponent::ReloadCurrentWeapon()
 	{
 		CurrentWeapon->Reload();
 		SearchOverlapsForAmmo();
+		OnAmmoChangedDelegate.ExecuteIfBound(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment());
 	}
 }
 
@@ -36,6 +52,9 @@ void UWeaponManagerComponent::ReplenishAmmo(IAmmoSource* AmmoSource)
 {
 	ReplenishAmmo(AmmoSource, PrimaryWeapon);
 	ReplenishAmmo(AmmoSource, SecondaryWeapon);
+
+	if (const auto& CurrentWeapon = *CurrentWeaponReference)
+		OnAmmoChangedDelegate.ExecuteIfBound(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment());
 }
 
 float UWeaponManagerComponent::GetCurrentWeaponZoomFov() const
@@ -51,6 +70,19 @@ void UWeaponManagerComponent::SwitchCurrentWeapon()
 	const auto OtherWeaponReference = GetOtherWeaponReference();
 	if (OtherWeaponReference && *OtherWeaponReference)
 		CurrentWeaponReference = GetOtherWeaponReference();
+
+	if (const auto& CurrentWeapon = *CurrentWeaponReference)
+	{
+		OnCurrentWeaponChangedDelegate.ExecuteIfBound(
+			CurrentWeapon->GetMagAtTheMoment(),
+			CurrentWeapon->GetAmmoAtTheMoment(),
+			CurrentWeapon->GetWeaponTypeFString(),
+			CurrentWeapon->GetReticle()
+		);
+	}
+
+	if (const auto& OtherWeapon = *GetOtherWeaponReference())
+		OnOtherWeaponChangedDelegate.ExecuteIfBound(OtherWeapon->GetWeaponTypeFString());
 }
 
 const AWeapon* UWeaponManagerComponent::GetCurrentWeapon() const
@@ -81,6 +113,13 @@ void UWeaponManagerComponent::SwapCurrentWeapon(AWeapon* Weapon)
 		DetachWeapon(CurrentWeapon);
 		CurrentWeapon = Weapon;
 	}
+
+	OnCurrentWeaponChangedDelegate.ExecuteIfBound(
+		CurrentWeapon->GetMagAtTheMoment(),
+		CurrentWeapon->GetAmmoAtTheMoment(),
+		CurrentWeapon->GetWeaponTypeFString(),
+		CurrentWeapon->GetReticle()
+	);
 }
 
 bool UWeaponManagerComponent::IsWeaponTypeInLoadout(EWeaponType WeaponType) const
@@ -154,7 +193,7 @@ bool UWeaponManagerComponent::TryAttachWeapon(AWeapon* Weapon)
 	if (const auto AttachmentTarget = Owner->GetRootComponent())
 	{
 		const FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true);
-		Weapon->AttachToComponent(AttachmentTarget, AttachmentRules); // If actor gets reals mesh it should be changed to sockets
+		Weapon->AttachToComponent(AttachmentTarget, AttachmentRules); // If actor gets real mesh it should be changed to socket
 		Weapon->SetOwner(GetOwner());
 		Weapon->OnAttachment();
 
@@ -166,7 +205,7 @@ bool UWeaponManagerComponent::TryAttachWeapon(AWeapon* Weapon)
 
 void UWeaponManagerComponent::InitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassOf<AWeapon> WeaponClass)
 {
-	if (Weapon || !WeaponClass) // Function can be used only to init weapons at the start, not in other way
+	if (Weapon || !WeaponClass) // Function can be used only to init weapons at the start, not in other way!
 		return;
 
 	const auto World = GetWorld();
@@ -175,6 +214,6 @@ void UWeaponManagerComponent::InitWeapon(TObjectPtr<AWeapon>& Weapon, TSubclassO
 
 	FActorSpawnParameters ActorSpawnParams;
 	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	Weapon = World->SpawnActor<AWeapon>(WeaponClass, ActorSpawnParams); // It is spawning but in player, it works but should be done better
+	Weapon = World->SpawnActor<AWeapon>(WeaponClass, ActorSpawnParams); // It is spawning but in player, it works, but should be reworked
 	TryAttachWeapon(Weapon);
 }

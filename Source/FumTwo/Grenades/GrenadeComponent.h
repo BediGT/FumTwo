@@ -9,31 +9,34 @@
 
 class AGrenade;
 
+DECLARE_DELEGATE_OneParam(FOnGrenadesChangedDelegate, /*GrenadesCount*/ int32);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable)
 class FUMTWO_API UGrenadesComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Grenades")
-	uint32 Grenades = 1;
+	int32 Grenades = 1;
 
 	UPROPERTY(EditAnywhere, Category = "Grenades")
-	uint32 MaxGrenades = 1;
+	int32 MaxGrenades = 1;
 
 	UPROPERTY(EditAnywhere, Category = "Grenades")
 	TSubclassOf<AGrenade> GrenadeClass = nullptr;
 
 public:
+	FOnGrenadesChangedDelegate OnGrenadesChangedDelegate{};
+
 	UGrenadesComponent();
 
 protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	uint32 GetGrenades() const;
+	int32 GetGrenades() const;
 	
 	void ThrowGrenade(const FTransform& Transform);
 

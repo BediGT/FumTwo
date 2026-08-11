@@ -18,7 +18,7 @@ class FUMTWO_API IMainController
 	GENERATED_BODY()
 
 public:
-	virtual void ZoomIn(const float& ZoomFov) = 0;
+	virtual void ZoomIn(float ZoomFov) = 0;
 	virtual void ResetZoom() = 0;
 	virtual void SwitchPawn(APawn* Pawn) = 0;
 };
