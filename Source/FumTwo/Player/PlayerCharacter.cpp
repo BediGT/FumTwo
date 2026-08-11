@@ -169,17 +169,13 @@ void APlayerCharacter::EndCrouch()
 void APlayerCharacter::OnShoot()
 {
 	if (Camera && WeaponManager)
-	{
-		WeaponManager->FireCurrentWeapon(Camera->GetForwardVector(), Camera->GetComponentLocation());
-	}
+    WeaponManager->FireCurrentWeapon(Camera->GetForwardVector(), Camera->GetComponentLocation());
 }
 
 void APlayerCharacter::ReloadCurrentWeapon()
 {
 	if (!WeaponManager)
-		return;
-
-	WeaponManager->ReloadCurrentWeapon();
+    WeaponManager->ReloadCurrentWeapon();
 }
 
 void APlayerCharacter::ZoomIn()
@@ -206,9 +202,7 @@ void APlayerCharacter::Interact()
 void APlayerCharacter::SwitchCurrentWeapon()
 {
 	if (WeaponManager)
-	{
 		WeaponManager->SwitchCurrentWeapon();
-	}
 }
 
 void APlayerCharacter::ThrowGrenade()
@@ -265,9 +259,7 @@ void APlayerCharacter::InteractWithAmmoSource(AActor* AmmoSource)
 {
 	const auto Ammo = Cast<IAmmoSource>(AmmoSource);
 	if (Ammo && WeaponManager)
-	{
 		WeaponManager->ReplenishAmmo(Ammo);
-	}
 }
 
 bool APlayerCharacter::CanPickUpWeapon(const EWeaponType WeaponToPickUpType)
