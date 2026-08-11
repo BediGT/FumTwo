@@ -12,6 +12,8 @@ class UInputAction;
 struct FInputActionValue;
 class UUserWidget;
 class UInputMappingContext;
+class UPlayerHUD;
+class UWeaponManagerComponent;
 
 UCLASS()
 class FUMTWO_API AMainPlayerController : public APlayerController, public IMainController
@@ -27,25 +29,39 @@ class FUMTWO_API AMainPlayerController : public APlayerController, public IMainC
 	double DefaultSensitivity = 0.253994f;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputMappingContext* IMC_DefaultMappingContext = nullptr; 
+	TObjectPtr<UInputMappingContext> IMC_DefaultMappingContext = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* IA_Look = nullptr;
+	TObjectPtr<UInputAction> IA_Look = nullptr;
 
-	IPossessable* LastPossessedPawn = nullptr;
+	// Head Up Display
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<UPlayerHUD> HUDClass = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UPlayerHUD> HUD = nullptr;
+
+public:
+	AMainPlayerController();
 
 protected:
 	virtual void BeginPlay() override;
-
 	virtual void SetupInputComponent() override;
-	void Look(const FInputActionValue& Value);
 
+	void Look(const FInputActionValue& Value);
 	virtual void SetZoomedSensitivity(const float& ZoomFov);
 
-	virtual void OnPossess(APawn* InPawn) override;
+	void BindWeaponManagerToHUD(UWeaponManagerComponent* WeaponManager);
+	void UnbindWeaponManagerFromHUD(UWeaponManagerComponent* WeaponManager);
+
+	void SetupPawn(APawn* Pawn);
+	void LeavePawn(APawn* Pawn);
+
+	UFUNCTION()
+	void OnPawnChanged(APawn* PreviousPawn, APawn* NextPawn);
 	
 public:
-	virtual void ZoomIn(const float& ZoomFov) override;
+	virtual void ZoomIn(float ZoomFov) override;
 	virtual void ResetZoom() override;
 	virtual void SwitchPawn(APawn* NewPawn) override;
 };

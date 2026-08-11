@@ -6,8 +6,6 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Blueprint/UserWidget.h"
-#include "PlayerHUD.h"
 #include "../Equipment/EquipmentComponent.h"
 #include "../Grenades/GrenadeComponent.h"
 #include "../Interfaces/Interactable.h"
@@ -15,35 +13,9 @@
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
 #include "FumTwo/Interfaces/MainController.h"
-#include <EnhancedPlayerInput.h>
-#include <InputTriggers.h>
-#include <Templates/Casts.h>
-#include <Templates/SubclassOf.h>
-#include <UObject/Object.h>
-#include <UObject/UObjectBaseUtility.h>
-#include <UObject/UObjectGlobals.h>
-#include <Containers/Array.h>
-#include <CoreGlobals.h>
-#include <Delegates/Delegate.h>
-#include <GenericPlatform/GenericPlatformMisc.h>
-#include <HAL/Platform.h>
-#include <Logging/LogMacros.h>
-#include <Math/MathFwd.h>
-#include <Components/InputComponent.h>
-#include <Components/PrimitiveComponent.h>
-#include <Engine/EngineTypes.h>
-#include <Engine/HitResult.h>
-#include <Engine/World.h>
-#include <GameFramework/Actor.h>
-#include <GameFramework/Character.h>
-#include <GameFramework/Pawn.h>
-#include <GameFramework/PlayerController.h>
-#include <FumTwo/Enums/EnumEquipmentType.h>
-#include <FumTwo/Enums/EnumWeaponTypes.h>
 #include <FumTwo/Interfaces/AmmoSource.h>
 #include <FumTwo/Components/WeaponManagerComponent.h>
 #include <Math/UnrealMathUtility.h>
-#include <UObject/WeakInterfacePtr.h>
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -79,21 +51,7 @@ void APlayerCharacter::BeginPlay()
 		GrenadesComponent->RegisterComponent();
 	}
 
-	MyController = Cast<IMainController>(Controller);
-
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (IsValid(PlayerController) && IsValid(HUDClass))
-	{
-		HUD = CreateWidget<UPlayerHUD>(PlayerController, HUDClass);
-		HUD->AddToPlayerScreen();
-		UpdateWeapons();
-		UpdateEquipment();
-		UpdateGrenades();
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[APlayerCharacter::BeginPlay] Controller or HUD Class is invalid"));
-
-	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	if (const auto Capsule = GetCapsuleComponent())
 	{
 		Capsule->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnBeginOverlap);
 		Capsule->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnEndOverlap);
@@ -122,7 +80,8 @@ void APlayerCharacter::UpdateNearestInteractable()
 	if (NewInteractable != InteractionTarget)
 	{
 		InteractionTarget = NewInteractable;
-		HUD->UpdateInteractionMessage(InteractionTarget.IsValid() ? InteractionTarget->GetInteractionMessage() : L"");
+		const FString InteractionMessage = InteractionTarget.IsValid() ? InteractionTarget->GetInteractionMessage() : L"";
+		OnInteractableChangedDelegate.ExecuteIfBound(InteractionMessage);
 	}
 }
 
@@ -137,7 +96,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	if (const auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		
@@ -176,8 +135,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 bool APlayerCharacter::CanJumpInternal_Implementation() const
 {
-	bool bJumpIsAllowed = GetMovementComponent()->IsJumpAllowed()
-		&& (GetMovementComponent()->IsMovingOnGround() || GetMovementComponent()->IsFalling());
+	bool bJumpIsAllowed = GetMovementComponent()->IsJumpAllowed() && (GetMovementComponent()->IsMovingOnGround() || GetMovementComponent()->IsFalling());
 
 	if (bJumpIsAllowed)
 	{
@@ -191,8 +149,7 @@ bool APlayerCharacter::CanJumpInternal_Implementation() const
 		else
 		{
 			const bool bJumpKeyHeld = (bPressedJump && JumpKeyHoldTime < GetJumpMaxHoldTime());
-			bJumpIsAllowed = bJumpKeyHeld &&
-				((JumpCurrentCount < JumpMaxCount) || (bWasJumping && JumpCurrentCount == JumpMaxCount));
+			bJumpIsAllowed = bJumpKeyHeld && ((JumpCurrentCount < JumpMaxCount) || (bWasJumping && JumpCurrentCount == JumpMaxCount));
 		}
 	}
 
@@ -212,31 +169,28 @@ void APlayerCharacter::EndCrouch()
 void APlayerCharacter::OnShoot()
 {
 	if (Camera && WeaponManager)
-	{
 		WeaponManager->FireCurrentWeapon(Camera->GetForwardVector(), Camera->GetComponentLocation());
-		UpdateWeapons();
-	}
 }
 
 void APlayerCharacter::ReloadCurrentWeapon()
 {
-	if (!WeaponManager)
-		return;
-
-	WeaponManager->ReloadCurrentWeapon();
-	UpdateWeapons();
+	if (WeaponManager)
+		WeaponManager->ReloadCurrentWeapon();
 }
 
 void APlayerCharacter::ZoomIn()
 {
-	if (MyController && WeaponManager)
-		MyController->ZoomIn(WeaponManager->GetCurrentWeaponZoomFov());
+	if (!WeaponManager)
+		return;
+
+	if (const auto MainController = Cast<IMainController>(GetController()))
+		MainController->ZoomIn(WeaponManager->GetCurrentWeaponZoomFov());
 }
 
 void APlayerCharacter::ZoomOut()
 {
-	if (MyController)
-		MyController->ResetZoom();
+	if (const auto MainController = Cast<IMainController>(GetController()))
+		MainController->ResetZoom();
 }
 
 void APlayerCharacter::Interact()
@@ -248,10 +202,7 @@ void APlayerCharacter::Interact()
 void APlayerCharacter::SwitchCurrentWeapon()
 {
 	if (WeaponManager)
-	{
 		WeaponManager->SwitchCurrentWeapon();
-		UpdateWeapons();
-	}
 }
 
 void APlayerCharacter::ThrowGrenade()
@@ -263,7 +214,6 @@ void APlayerCharacter::ThrowGrenade()
 	}	
 
 	GrenadesComponent->ThrowGrenade(Camera->GetComponentTransform());
-	UpdateGrenades();
 }
 
 void APlayerCharacter::UseEquipment()
@@ -277,59 +227,15 @@ void APlayerCharacter::UseEquipment()
 		EquipmentComponent = NewObject<UEquipmentComponent>(this, UEquipmentComponent::StaticClass());
 		EquipmentComponent->RegisterComponent();
 
-		UpdateEquipment();
+		OnEquipmentChangedDelegate.ExecuteIfBound(EquipmentComponent->GetIcon());
 	}
-}
-
-void APlayerCharacter::UpdateWeapons()
-{
-	if (!IsValid(HUD))
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD is invalid!"), *GetNameSafe(this));
-		return;
-	}
-
-	if (!WeaponManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] WeaponManager is invalid!"), *GetNameSafe(this));
-		return;
-	}
-
-	if (const auto CurrentWeapon = WeaponManager->GetCurrentWeapon())
-		HUD->UpdateCurrentWeapon(CurrentWeapon->GetMagAtTheMoment(), CurrentWeapon->GetAmmoAtTheMoment(), CurrentWeapon->GetWeaponTypeFString(), CurrentWeapon->GetReticle());
-
-	if (const auto OtherWeapon = WeaponManager->GetOtherWeapon())
-		HUD->UpdateOtherWeapon(OtherWeapon->GetWeaponTypeFString());
-}
-
-void APlayerCharacter::UpdateGrenades() const
-{
-	if (IsValid(HUD) && GrenadesComponent)
-	{
-		HUD->UpdateGrenades(GrenadesComponent->GetGrenades());
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or grenade component is invalid!"), *GetNameSafe(this));
-}
-
-void APlayerCharacter::UpdateEquipment() const
-{
-	if (IsValid(HUD) && EquipmentComponent)
-	{
-		HUD->UpdateEquipmentIcon(EquipmentComponent->GetIcon());
-	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("[%s] HUD or equipment component is invalid!"), *GetNameSafe(this))
 }
 
 void APlayerCharacter::InteractWithWeapon(AActor* Weapon)
 {
 	const auto NewWeapon = Cast<AWeapon>(Weapon);
 	if (NewWeapon && WeaponManager)
-	{
 		WeaponManager->SwapCurrentWeapon(NewWeapon);
-		UpdateWeapons();
-	}
 }
 
 void APlayerCharacter::InteractWithEquipment(const TSubclassOf<UEquipmentComponent>& EquipmentClass)
@@ -345,7 +251,7 @@ void APlayerCharacter::InteractWithEquipment(const TSubclassOf<UEquipmentCompone
 		EquipmentComponent = NewObject<UEquipmentComponent>(this, EquipmentClass);
 		EquipmentComponent->RegisterComponent();
 
-		UpdateEquipment();
+		OnEquipmentChangedDelegate.ExecuteIfBound(EquipmentComponent->GetIcon());
 	}
 }
 
@@ -353,10 +259,7 @@ void APlayerCharacter::InteractWithAmmoSource(AActor* AmmoSource)
 {
 	const auto Ammo = Cast<IAmmoSource>(AmmoSource);
 	if (Ammo && WeaponManager)
-	{
 		WeaponManager->ReplenishAmmo(Ammo);
-		UpdateWeapons();
-	}
 }
 
 bool APlayerCharacter::CanPickUpWeapon(const EWeaponType WeaponToPickUpType)

@@ -18,7 +18,7 @@ void UGrenadesComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (const ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	if (const auto Character = Cast<ACharacter>(GetOwner()))
 		Character->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UGrenadesComponent::CollectGrenades);
 }
 
@@ -27,7 +27,7 @@ void UGrenadesComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-uint32 UGrenadesComponent::GetGrenades() const
+int32 UGrenadesComponent::GetGrenades() const
 {
 	return Grenades;
 }
@@ -40,15 +40,18 @@ void UGrenadesComponent::ThrowGrenade(const FTransform& Transform)
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		World->SpawnActor<AGrenade>(GrenadeClass, Transform.GetLocation(), FRotator(Transform.GetRotation()), ActorSpawnParams);
 		Grenades--;
+		OnGrenadesChangedDelegate.ExecuteIfBound(Grenades);
 	}
 }
 
 void UGrenadesComponent::CollectGrenades(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (APickup* Pickup = Cast<APickup>(OtherActor); IsValid(Pickup) && Pickup->GetPickupType() == EPickupType::Grenade && Grenades < MaxGrenades)
+	const auto Pickup = Cast<APickup>(OtherActor);
+	if (IsValid(Pickup) && Pickup->GetPickupType() == EPickupType::Grenade && Grenades < MaxGrenades)
 	{
 		Grenades++;
 		Pickup->Destroy();
+		OnGrenadesChangedDelegate.ExecuteIfBound(Grenades);
 	}
 }

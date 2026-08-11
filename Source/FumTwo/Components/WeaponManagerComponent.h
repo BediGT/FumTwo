@@ -7,6 +7,11 @@
 class AWeapon;
 class IAmmoSource;
 
+DECLARE_DELEGATE_OneParam(FOnShootDelegate, /*MagAmmo*/ int32);
+DECLARE_DELEGATE_TwoParams(FOnAmmoChangedDelegate, /*MagAmmo*/ int32, /*AllAmmo*/ int32);
+DECLARE_DELEGATE_FourParams(FOnOnCurrentWeaponChangedDelegate, /*Mag*/ int32, /*Ammo*/ int32, /*WeaponName*/ const FString&, /*Reticle*/ UTexture2D*);
+DECLARE_DELEGATE_OneParam(FOnOnOtherWeaponChangedDelegate, /*WeaponName*/ const FString&);
+
 UCLASS(meta=(BlueprintSpawnableComponent))
 class FUMTWO_API UWeaponManagerComponent : public UActorComponent
 {
@@ -27,6 +32,11 @@ class FUMTWO_API UWeaponManagerComponent : public UActorComponent
 	TObjectPtr<AWeapon>* CurrentWeaponReference = nullptr;
 
 public:
+	FOnShootDelegate OnShootDelegate{};
+	FOnAmmoChangedDelegate OnAmmoChangedDelegate{};
+	FOnOnCurrentWeaponChangedDelegate OnCurrentWeaponChangedDelegate{};
+	FOnOnOtherWeaponChangedDelegate OnOtherWeaponChangedDelegate{};
+
 	UWeaponManagerComponent();
 
 protected:
