@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include"../DataAssets/DamageDA.h"
+#include"../../DataAssets/DamageDA.h"
 #include "Projectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -15,11 +15,8 @@ class FUMTWO_API AProjectile : public AActor
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UProjectileMovementComponent* ProjectileMovement = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UStaticMeshComponent* StaticMeshComponent = nullptr;
+	UPROPERTY()
+	const UDamageDA* DamageDA = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
 	float MovementSpeed = 10000.0f;
@@ -27,11 +24,14 @@ class FUMTWO_API AProjectile : public AActor
 	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
 	float Gravity = 0.0f;
 
-	UPROPERTY()
-	const UDamageDA* DamageDA = nullptr;
+protected:
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UProjectileMovementComponent* ProjectileMovement = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UStaticMeshComponent* StaticMeshComponent = nullptr;
 
 public:	
-
 	AProjectile();
 
 	void SetDamageDA(const UDamageDA* NewDamageDA);

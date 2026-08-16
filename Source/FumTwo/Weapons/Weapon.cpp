@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Weapon.h"
-#include "Projectile.h"
+#include "Projectiles/Projectile.h"
 #include "../Interfaces/Interactor.h"
 #include "Kismet/GameplayStatics.h"
 #include "../DataAssets/WeaponDA.h"

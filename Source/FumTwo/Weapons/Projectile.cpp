@@ -5,15 +5,14 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "../Interfaces/Damageable.h"
+#include "../../Interfaces/Damageable.h"
 
 AProjectile::AProjectile()
 {
-	PrimaryActorTick.bCanEverTick = true;\
+	PrimaryActorTick.bCanEverTick = true;
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
 	StaticMeshComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
-	StaticMeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
 	StaticMeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlapBegin);
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
@@ -63,7 +62,7 @@ void AProjectile::OnHit(
 {
 	if (OtherActor && OtherActor != this && OtherComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("HIT SOMETHING"));
+		UE_LOG(LogTemp, Display, TEXT("HIT SOMETHING"));
 		Destroy();
 	}
 }
