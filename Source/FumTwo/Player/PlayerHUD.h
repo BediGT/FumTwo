@@ -46,9 +46,13 @@ class FUMTWO_API UPlayerHUD : public UUserWidget
 	
 public:
 	void SetHealthBarValue(float HealthValue, float MaxHealth) const;
-	void UpdateCurrentWeapon(const uint32& MagAtTheMoment, const uint32& AmmoAtTheMoment, const FString& Type, UTexture2D* Reticle2D) const;
+
+	void UpdateCurrentWeapon(int32 MagAtTheMoment, int32 AmmoAtTheMoment, const FString& Type, UTexture2D* Reticle2D) const;
+	void UpdateCurrentWeaponMagazine(int32 MagAtTheMoment) const;
+	void UpdateCurrentWeaponAmmo(int32 MagAtTheMoment, int32 AmmoAtTheMoment) const;
+
 	void UpdateOtherWeapon(const FString& Type) const;
-	void UpdateGrenades(const uint32& GrenadesNumber) const;
+	void UpdateGrenades(int32 GrenadesNumber) const;
 	void UpdateEquipmentIcon(UTexture2D* Icon) const;
 	void UpdateInteractionMessage(const FString& Message) const;
 };

@@ -13,7 +13,7 @@ void UPlayerHUD::SetHealthBarValue(const float HealthValue, const float MaxHealt
 		HealthBar->SetPercent(HealthValue / MaxHealth);
 }
 
-void UPlayerHUD::UpdateCurrentWeapon(const uint32& MagAtTheMoment, const uint32& AmmoAtTheMoment, const FString& Type, UTexture2D* Reticle2D) const
+void UPlayerHUD::UpdateCurrentWeapon(int32 MagAtTheMoment, int32 AmmoAtTheMoment, const FString& Type, UTexture2D* Reticle2D) const
 {
 	if (Magazine)
 		Magazine->SetText(FText::FromString(FString::FromInt(MagAtTheMoment)));
@@ -28,13 +28,28 @@ void UPlayerHUD::UpdateCurrentWeapon(const uint32& MagAtTheMoment, const uint32&
 		Reticle->SetBrushFromTexture(Reticle2D);
 }
 
+void UPlayerHUD::UpdateCurrentWeaponMagazine(int32 MagAtTheMoment) const
+{
+	if (Magazine)
+		Magazine->SetText(FText::FromString(FString::FromInt(MagAtTheMoment)));
+}
+
+void UPlayerHUD::UpdateCurrentWeaponAmmo(int32 MagAtTheMoment, int32 AmmoAtTheMoment) const
+{
+	if (Magazine)
+		Magazine->SetText(FText::FromString(FString::FromInt(MagAtTheMoment)));
+
+	if (Ammo)
+		Ammo->SetText(FText::FromString(FString::FromInt(AmmoAtTheMoment)));
+}
+
 void UPlayerHUD::UpdateOtherWeapon(const FString& Type) const
 {
 	if (OtherWeaponType)
 		OtherWeaponType->SetText(FText::FromString(Type));
 }
 
-void UPlayerHUD::UpdateGrenades(const uint32& GrenadesNumber) const
+void UPlayerHUD::UpdateGrenades(int32 GrenadesNumber) const
 {
 	if (GrenadesCount)
 		GrenadesCount->SetText(FText::FromString(FString::FromInt(GrenadesNumber)));

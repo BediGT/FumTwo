@@ -7,7 +7,7 @@
 
 UEquipmentComponent::UEquipmentComponent()
 {
-	if (const ConstructorHelpers::FObjectFinder<UTexture2D> EmptyIcon(TEXT("/Game/HudIcons/Transparent120x120.Transparent120x120")); EmptyIcon.Succeeded())
+	if (const ConstructorHelpers::FObjectFinder<UTexture2D> EmptyIcon(TEXT("/Game/HudIcons/T_Transparent120x120.T_Transparent120x120")); EmptyIcon.Succeeded())
 		Icon = EmptyIcon.Object;
 }
 
@@ -42,11 +42,6 @@ void UEquipmentComponent::SpawnEquipment(const FTransform& Transform) const
 	{
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-		// AEquipment* SpawnedEquipment = World->SpawnActor<AEquipment>(
-		// 	EquipmentClass, GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector().GetSafeNormal() * 150.0),
-		// 	{0.0, 0.0, 0.0}, ActorSpawnParams);
-		// SpawnedEquipment->AddVelocity(GetOwner()->GetActorForwardVector().GetSafeNormal() * 500.0);
-
 		AEquipment* SpawnedEquipment = World->SpawnActor<AEquipment>(
 			EquipmentClass, Transform.GetLocation() + (Transform.Rotator().Vector().GetSafeNormal() * 150.0), {0.0, 0.0, 0.0}, ActorSpawnParams);
 		SpawnedEquipment->AddVelocity(Transform.Rotator().Vector().GetSafeNormal() * 500.0);

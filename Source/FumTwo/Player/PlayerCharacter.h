@@ -5,46 +5,40 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "../Interfaces/Interactor.h"
+#include "FumTwo/Interfaces/Possessable.h"
+#include "FumTwo/Interfaces/Passenger.h"
+#include <Containers/Array.h>
+#include <UObject/WeakInterfacePtr.h>
+#include <UObject/ObjectPtr.h>
 #include "PlayerCharacter.generated.h"
 
-class IAmmoSource;
-class AWeapon;
-class IInteractable;
-class UGrenadesComponent;
 struct FInputActionValue;
 
+class UWeaponManagerComponent;
+class IInteractable;
+class UGrenadesComponent;
 class AEquipmentPickup;
 class UEquipmentComponent;
-class AMainPlayerController;
 class UCameraComponent;
 class UInputAction;
-class UPickupMappingManager;
-class APickup;
-class UPlayerHUD;
-class UInventoryComponent;
-class AGrenade;
+class UInputMappingContext;
+class UInputComponent;
+
+DECLARE_DELEGATE_OneParam(FOnInteractableChangedDelegate, /*NewInteractionMessage*/ const FString&);
+DECLARE_DELEGATE_OneParam(FOnEquipmentChangedDelegate, /*NewEquipmentIcon*/ UTexture2D*);
 
 UCLASS()
-class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
+class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor, public IPossessable, public IPassenger
 {
 	GENERATED_BODY()
-
-	//Controller
-	UPROPERTY()
-	AMainPlayerController* MyController = nullptr;
 
 	// Camera
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCameraComponent* Camera = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	float FieldOfView = 98.0f;
-
 	// Input actions
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Move = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* IA_Look = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Jump = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -70,25 +64,9 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float JumpHeight = 600.0f;
-	
-	// Head Up Display
-	UPROPERTY(EditAnywhere, Category = "HUD")
-	TSubclassOf<UPlayerHUD> HUDClass = nullptr;
 
-	UPROPERTY()
-	UPlayerHUD* HUD = nullptr;
-
-	// Weapons
-	// UPROPERTY(EditAnywhere, Category = "DefaultWepaonClass")
-	// TSubclassOf<AWeapon> DefaultWeaponClass = nullptr;
-	
-	UPROPERTY(EditAnywhere, Category = "Weapons")
-	AWeapon* PrimaryWeapon = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Weapons")
-	AWeapon* SecondaryWeapon = nullptr;
-
-	AWeapon** CurrentWeapon = nullptr;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr <UWeaponManagerComponent> WeaponManager = nullptr;
 
 	// Equipment
 	UPROPERTY(EditAnywhere, Category = "Equipment")
@@ -104,55 +82,43 @@ class FUMTWO_API APlayerCharacter : public ACharacter, public IInteractor
 	UPROPERTY()
 	UGrenadesComponent* GrenadesComponent = nullptr;
 
-	TArray<IInteractable*> OverlappingInteractables{};
+	TArray<TWeakInterfacePtr<IInteractable>> Interactables{};
+	TWeakInterfacePtr<IInteractable> InteractionTarget = nullptr;
 
-	IInteractable* NearestAvailableInteractable = nullptr;
+	// Possessable
+	UPROPERTY(EditAnywhere, Category = "Input Mapping Context")
+	UInputMappingContext* MappingContext = nullptr;
+
 
 public:
+	FOnInteractableChangedDelegate OnInteractableChangedDelegate{};
+	FOnEquipmentChangedDelegate OnEquipmentChangedDelegate{};
+
 	APlayerCharacter();
 
 protected:
 	virtual void BeginPlay() override;
+	void UpdateNearestInteractable();
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	// Input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// Movement
 	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
 	virtual bool CanJumpInternal_Implementation() const override;
 	void StartCrouch();
 	void EndCrouch();
 
-	// Weapons
-	void FireCurrentWeapon();
-protected:
-	bool WeaponsNeedAmmo() const;
-	void AddAmmoToWeapons(IAmmoSource* AmmoSource) const;
-public:
+	void OnShoot();
 	void ReloadCurrentWeapon();
-	void StartZoomCurrentWeapon();
-	void EndZoomCurrentWeapon();
+	void ZoomIn();
+	void ZoomOut();
 	void Interact();
-	void ChangeCurrentWeapon();
-	void DetachCurrentWeapon() const;
-	void AttachWeapon(AWeapon* Weapon);
-	AWeapon** GetOtherWeapon();
-	
+	void SwitchCurrentWeapon();
 
-	// Grenades
 	void ThrowGrenade();
 
-	//Equipment
 	void UseEquipment();
-
-	// Head Up Display
-	void UpdateWeapons();
-	void UpdateGrenades() const;
-	void UpdateEquipment() const;
 
 	// Interactor
 	virtual void InteractWithWeapon(AActor* Weapon) override;
@@ -168,5 +134,12 @@ public:
 						int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	
+
+	//Possessable
+	virtual const UInputMappingContext* GetMappingContext() const override;
+
+	// Passenger
+	virtual void OnEnterVehicle() override;
+	virtual void OnExitVehicle() override;
+	virtual APawn* GetPawn() override;
 };
