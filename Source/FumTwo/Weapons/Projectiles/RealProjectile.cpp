@@ -3,7 +3,6 @@
 
 #include "RealProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "../../Math/Constants.h"
 
@@ -12,21 +11,15 @@ ARealProjectile::ARealProjectile()
 {
 	StaticMeshComponent->SetMassOverrideInKg(NAME_None, Mass, true);
 
-	ProjectileMovement->MaxSpeed = 0.f;
-	ProjectileMovement->InitialSpeed = 23000.f; // 230 m/s
-	ProjectileMovement->ProjectileGravityScale = 1.f;
-
-	InitialLifeSpan = 0.0f;
-
 	CsvData = TEXT("Speed;Vel.X;Vel.Y;Vel.Z\n");
 }
 
 void ARealProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UpdateBullet(DeltaTime);
 
-	DrawDebugLine(GetWorld(), GetActorLocation() - GetVelocity() * DeltaTime, GetActorLocation(), FColor::Green, false, 180.f, 0, 1.5f);
+	UpdateBullet(DeltaTime);
+	//DrawDebugLine(GetWorld(), GetActorLocation() - GetVelocity() * DeltaTime, GetActorLocation(), FColor::Green, false, 180.f, 0, 1.5f);
 }
 
 void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
@@ -36,6 +29,14 @@ void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	bool bFromSweep,
 	const FHitResult& OverlapResult)
 {
+	Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, OverlapResult);
+
+	FString DebugText = FString::Printf(TEXT("Overlap: %s | Index ISM: %d"), *OtherActor->GetName(), OverlapResult.Item);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, DebugText);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugText);
+	DebugText = FString::Printf(TEXT("Overlap: %s | MyIndex ISM: %d"), *OtherActor->GetName(), OverlapResult.MyItem);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, DebugText);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugText);
 }
 
 void ARealProjectile::OnHit(

@@ -3,7 +3,6 @@
 
 #include "Projectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "../../Interfaces/Damageable.h"
 
@@ -14,18 +13,17 @@ AProjectile::AProjectile()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
 	StaticMeshComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
+	StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 	StaticMeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlapBegin);
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	RootComponent = StaticMeshComponent;
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement"));
 	ProjectileMovement->UpdatedComponent = StaticMeshComponent;
-	ProjectileMovement->InitialSpeed = MovementSpeed;
-	ProjectileMovement->MaxSpeed = MovementSpeed;
-	ProjectileMovement->ProjectileGravityScale = Gravity;
+	ProjectileMovement->InitialSpeed = 10000.f;
+	ProjectileMovement->ProjectileGravityScale = 0.f;
+	ProjectileMovement->MaxSpeed = 0.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
-
-	InitialLifeSpan = 10.0f;
 }
 
 void AProjectile::SetDamageDA(const UDamageDA* NewDamageDA)

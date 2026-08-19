@@ -33,22 +33,22 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	void OnOverlapBegin(
+	virtual void OnOverlapBegin(
 		UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex,
 		bool bFromSweep,
 		const FHitResult& OverlapResult
-	);
+	) override;
 
-	void OnHit(
+	virtual void OnHit(
 		UPrimitiveComponent* HitComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit
-	);
+	) override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
