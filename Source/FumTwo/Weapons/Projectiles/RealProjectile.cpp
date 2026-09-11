@@ -19,7 +19,9 @@ void ARealProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateBullet(DeltaTime);
-	//DrawDebugLine(GetWorld(), GetActorLocation() - GetVelocity() * DeltaTime, GetActorLocation(), FColor::Green, false, 180.f, 0, 1.5f);
+	
+	if (bDrawPath)
+		DrawPath();
 }
 
 void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
@@ -31,12 +33,27 @@ void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 {
 	Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, OverlapResult);
 
-	FString DebugText = FString::Printf(TEXT("Overlap: %s | Index ISM: %d"), *OtherActor->GetName(), OverlapResult.Item);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, DebugText);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugText);
-	DebugText = FString::Printf(TEXT("Overlap: %s | MyIndex ISM: %d"), *OtherActor->GetName(), OverlapResult.MyItem);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, DebugText);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugText);
+	const FVector ProjectileDirection = GetActorForwardVector();
+	const FVector ImpactNormal = OverlapResult.ImpactNormal;
+
+	float ImpactCosine = FMath::Abs(FVector::DotProduct(ProjectileDirection, ImpactNormal));
+
+	const float RicochetCosine = FMath::Cos(FMath::DegreesToRadians(60.f));
+
+	if (ImpactCosine < RicochetCosine)
+	{
+		// Ricochet
+		SetActorLocation(OverlapResult.Location);
+		DrawDebugSphere(GetWorld(), GetActorLocation(), 3.f, 1, FColor::Blue, false, 20.f, 0, 1.f);
+
+		FVector NewDirection = FMath::GetReflectionVector(ProjectileDirection, ImpactNormal);
+		float Speed = ProjectileMovement->Velocity.Size();
+		ProjectileMovement->Velocity = NewDirection * Speed;
+	}
+	else
+	{
+		//Penetration
+	}
 }
 
 void ARealProjectile::OnHit(
@@ -60,9 +77,7 @@ void ARealProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ARealProjectile::UpdateBullet(float DeltaTime)
 {
-	const float Speed = GetVelocity().Size();
-
-	const float DragForce = 0.5 * AerodynamicCoefficient * Math::AirDensity * CrossSectionArea * Speed * Speed;
+	const float DragForce = 0.5f * AerodynamicCoefficient * Math::AirDensity * CrossSectionArea * GetVelocity().SizeSquared();
 	const float DragDeceleration = DragForce / Mass;
 
 	const FVector DragVector = -GetVelocity().GetSafeNormal();
@@ -74,4 +89,16 @@ void ARealProjectile::UpdateBullet(float DeltaTime)
 		ProjectileMovement->Velocity.Y,
 		ProjectileMovement->Velocity.Z
 	);
+}
+
+void ARealProjectile::DrawPath()
+{
+	const FVector CurrentPosition = GetActorLocation();
+
+	if (LastPosition.Equals(FVector::ZeroVector, 10e-6))
+		LastPosition = CurrentPosition;
+
+	DrawDebugSphere(GetWorld(), CurrentPosition, 1.f, 1, FColor::Red, false, 20.f, 0, 1.f);
+	DrawDebugLine(GetWorld(), LastPosition, CurrentPosition, FColor::Green, false, 20.f, 0, 0.5f);
+	LastPosition = CurrentPosition;
 }

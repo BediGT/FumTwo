@@ -2,10 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include <Math/MathFwd.h>
 #include "ShootingTarget.generated.h"
+
 class UStaticMesh;
 class UInstancedStaticMeshComponent;
+class UBoxComponent;
 
 UCLASS()
 class FUMTWO_API AShootingTarget : public AActor
@@ -13,10 +14,13 @@ class FUMTWO_API AShootingTarget : public AActor
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, Category = "Meshes")
-	UInstancedStaticMeshComponent* InstancedStatisMesh = nullptr;
+	TObjectPtr<UBoxComponent> BoundingBox = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Meshes")
+	TObjectPtr<UInstancedStaticMeshComponent> InstancedStaticMesh = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Meshes")
-	UStaticMesh* ElementStaticMesh = nullptr;
+	TObjectPtr<UStaticMesh> ElementStaticMesh = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Meshes")
 	FIntVector Dimensions{ 5, 50, 50 };

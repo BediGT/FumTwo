@@ -26,6 +26,11 @@ class FUMTWO_API ARealProjectile : public AProjectile
 	UPROPERTY(EditAnywhere, Category = "Physical Properties")
 	float CrossSectionArea = 0.578; // cm^2
 
+	UPROPERTY(EditAnywhere, Category = "Debug Options")
+	bool bDrawPath = false;
+
+	FVector LastPosition{};
+
 	FString CsvData{};
 
 public:	
@@ -53,4 +58,5 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void UpdateBullet(float DeltaTime);
+	void DrawPath();
 };
