@@ -24,6 +24,7 @@ AProjectile::AProjectile()
 	ProjectileMovement->ProjectileGravityScale = 0.f;
 	ProjectileMovement->MaxSpeed = 0.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->bSweepCollision = true;
 }
 
 void AProjectile::SetDamageDA(const UDamageDA* NewDamageDA)

@@ -2,14 +2,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ShootingTarget.generated.h"
+#include "../Interfaces/RealTargetInterface.h"
+#include "RealTarget.generated.h"
 
 class UStaticMesh;
 class UInstancedStaticMeshComponent;
 class UBoxComponent;
+class URealMaterialDataAsset;
 
 UCLASS()
-class FUMTWO_API AShootingTarget : public AActor
+class FUMTWO_API ARealTarget : public AActor, public IRealTargetInterface
 {
 	GENERATED_BODY()
 
@@ -24,9 +26,14 @@ class FUMTWO_API AShootingTarget : public AActor
 
 	UPROPERTY(EditAnywhere, Category = "Meshes")
 	FIntVector Dimensions{ 5, 50, 50 };
+
+	FIntVector LastDimensions{ 0, 0, 0};
+
+	UPROPERTY(EditAnywhere, Category = "Physical Properties")
+	const URealMaterialDataAsset* Material{};
 	
 public:	
-	AShootingTarget();
+	ARealTarget();
 
 protected:
 	virtual void BeginPlay() override;
@@ -44,4 +51,6 @@ public:
 		bool bFromSweep,
 		const FHitResult& OverlapResult
 	);
+
+	virtual const URealMaterialDataAsset* GetMaterial() const override;
 };

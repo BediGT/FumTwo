@@ -1,30 +1,38 @@
-#include "ShootingTarget.h"
+#include "RealTarget.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "../DataAssets/RealMaterialDataAsset.h"
 
-AShootingTarget::AShootingTarget()
+ARealTarget::ARealTarget()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
 	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Bounding Box"));
 	BoundingBox->SetCollisionProfileName(TEXT("BlockAll"));
-	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &AShootingTarget::OnOverlapBegin);
+	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &ARealTarget::OnOverlapBegin);
 	RootComponent = BoundingBox;
 
 	InstancedStaticMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BlockISM"));
 	InstancedStaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	InstancedStaticMesh->SetCanEverAffectNavigation(false);
 	InstancedStaticMesh->SetupAttachment(RootComponent);
+
+	InstancedStaticMesh->bHasPerInstanceHitProxies = false;
 }
 
-void AShootingTarget::BeginPlay()
+void ARealTarget::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void AShootingTarget::OnConstruction(const FTransform& Transform)
+void ARealTarget::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
+
+	if (Dimensions == LastDimensions && InstancedStaticMesh->GetInstanceCount() > 0)
+		return;
+
+	LastDimensions = Dimensions;
 
 	FVector Extent{ Dimensions.X * 0.5f, Dimensions.Y * 0.5f, Dimensions.Z * 0.5f };
 	BoundingBox->SetBoxExtent(Extent);
@@ -42,7 +50,12 @@ void AShootingTarget::OnConstruction(const FTransform& Transform)
 		{
 			for (int32 z = 0; z < Dimensions.Z; ++z)
 			{
-				FVector RelativeLocation(x - Dimensions.X * 0.5f, y - Dimensions.X * 0.5f, z - Dimensions.X * 0.5f);
+				const FVector RelativeLocation(
+					x - (Dimensions.X - 1) * 0.5f,
+					y - (Dimensions.Y - 1) * 0.5f,
+					z - (Dimensions.Z - 1) * 0.5f
+				);
+
 				FTransform InstanceTransform(RelativeLocation);
 
 				InstancedStaticMesh->AddInstance(InstanceTransform);
@@ -51,12 +64,12 @@ void AShootingTarget::OnConstruction(const FTransform& Transform)
 	}
 }
 
-void AShootingTarget::Tick(float DeltaTime)
+void ARealTarget::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void AShootingTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
+void ARealTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex,
@@ -75,4 +88,9 @@ void AShootingTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 		Transform.SetScale3D(FVector::ZeroVector);
 		InstancedStaticMesh->UpdateInstanceTransform(HitIndex, Transform);
 	}
+}
+
+const URealMaterialDataAsset* ARealTarget::GetMaterial() const
+{
+	return Material;
 }

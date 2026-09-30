@@ -5,26 +5,21 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.h"
+#include "../../Interfaces/RealProjectileInterface.h"
+#include "../../DataAssets/RealProjectileDataAsset.h"
 #include "RealProjectile.generated.h"
 
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
+class URealProjectileDataAsset;
 
 UCLASS()
-class FUMTWO_API ARealProjectile : public AProjectile
+class FUMTWO_API ARealProjectile : public AProjectile, public IRealProjectileInterface
 {
 	GENERATED_BODY()
 
-	// Params for cal .338
-
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float AerodynamicCoefficient = 0.3;
-
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float Mass = 0.045; // kg
-
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float CrossSectionArea = 0.578; // cm^2
+	UPROPERTY(EditAnywhere, Category = "Projectile Properties")
+	const TObjectPtr<URealProjectileDataAsset> ProjectileProperties{};
 
 	UPROPERTY(EditAnywhere, Category = "Debug Options")
 	bool bDrawPath = false;
@@ -59,4 +54,7 @@ public:
 
 	void UpdateBullet(float DeltaTime);
 	void DrawPath();
+
+	virtual const URealProjectileDataAsset* GetProjectileProperties() const override;
+	virtual const FVector GetProjectileVelocity() const override;
 };
