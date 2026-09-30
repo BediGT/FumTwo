@@ -5,7 +5,7 @@
 #include <Math/MathFwd.h>
 #include <Engine/Engine.h>
 
-void RealSolver::Solve(const IRealProjectileInterface* Projectile, const IRealTargetInterface* Target, const FHitResult& HitResult)
+void RealSolver::Solve(IRealProjectileInterface* Projectile, IRealTargetInterface* Target, const FHitResult& HitResult)
 {
 	if (!Projectile || !Target)
 		return;
@@ -57,6 +57,7 @@ void RealSolver::Solve(const IRealProjectileInterface* Projectile, const IRealTa
 	else if (!FMath::IsNearlyZero(PenetrationSpeed))
 	{
 		const double Penetration = ProjectileMaterial->Density * ProjectileSpeedSquared * ProjectileProperties->EffectiveLength / (2.0 * TargetResistance);
+		Target->OnImpact(HitResult.ImpactPoint, ProjectileVelocity, Penetration, ProjectileProperties->Caliber * 0.5);
 		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Green, FString::Printf(TEXT("Penetration: %lf"), Penetration));
 	}
 	else

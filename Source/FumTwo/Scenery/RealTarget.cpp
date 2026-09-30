@@ -2,22 +2,24 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "../DataAssets/RealMaterialDataAsset.h"
+#include "Engine/OverlapResult.h"
 
 ARealTarget::ARealTarget()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
 	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Bounding Box"));
-	BoundingBox->SetCollisionProfileName(TEXT("BlockAll"));
+	BoundingBox->SetCollisionProfileName(TEXT("OverlapAll"));
 	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &ARealTarget::OnOverlapBegin);
 	RootComponent = BoundingBox;
 
-	InstancedStaticMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BlockISM"));
-	InstancedStaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
+	InstancedStaticMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Instanced Static Mesh"));
+	InstancedStaticMesh->SetCollisionProfileName(TEXT("OverlapAll"));
 	InstancedStaticMesh->SetCanEverAffectNavigation(false);
+	InstancedStaticMesh->SetGenerateOverlapEvents(true);
 	InstancedStaticMesh->SetupAttachment(RootComponent);
 
-	InstancedStaticMesh->bHasPerInstanceHitProxies = false;
+	//InstancedStaticMesh->bHasPerInstanceHitProxies = false;
 }
 
 void ARealTarget::BeginPlay()
@@ -76,7 +78,7 @@ void ARealTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	bool bFromSweep,
 	const FHitResult& OverlapResult)
 {
-	if (!OtherActor || OtherActor == this || !InstancedStaticMesh)
+	/*if (!OtherActor || OtherActor == this || !InstancedStaticMesh)
 		return;
 
 	int32 HitIndex = OverlapResult.MyItem;
@@ -87,10 +89,52 @@ void ARealTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 		InstancedStaticMesh->GetInstanceTransform(HitIndex, Transform);
 		Transform.SetScale3D(FVector::ZeroVector);
 		InstancedStaticMesh->UpdateInstanceTransform(HitIndex, Transform);
-	}
+	}*/
 }
 
 const URealMaterialDataAsset* ARealTarget::GetMaterial() const
 {
 	return Material;
+}
+
+const void ARealTarget::OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepth, double Radius)
+{
+	if (!GetWorld())
+		return;
+
+	FVector Direction = ImpactDirection.GetSafeNormal();
+	FVector StartTrace = ImpactPoint;
+	FVector EndTrace = ImpactPoint + (ImpactDirection * PenetrationDepth);
+
+	auto CylinderShape = FCollisionShape::MakeCapsule(Radius, PenetrationDepth * 0.5f);
+
+	FVector CenterPoint = ImpactPoint + (Direction * (PenetrationDepth * 0.5f));
+	FQuat Rotation = Direction.ToOrientationQuat();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = true;
+
+	TArray<FOverlapResult> OverlapResults{};
+
+	bool bHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		CenterPoint,
+		Rotation,
+		ECC_GameTraceChannel1,
+		CylinderShape,
+		QueryParams
+	);
+
+	for (const auto& OverlapeResult : OverlapResults)
+	{
+		if (OverlapeResult.GetActor() != this || !InstancedStaticMesh->IsValidInstance(OverlapeResult.ItemIndex))
+			continue;
+
+		FTransform InstanceTransform{};
+		if (InstancedStaticMesh->GetInstanceTransform(OverlapeResult.ItemIndex, InstanceTransform))
+		{
+			InstanceTransform.SetScale3D(FVector::ZeroVector);
+			InstancedStaticMesh->UpdateInstanceTransform(OverlapeResult.ItemIndex, InstanceTransform);
+		}
+	}
 }

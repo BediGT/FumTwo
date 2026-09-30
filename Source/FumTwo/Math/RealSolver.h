@@ -9,5 +9,5 @@ class IRealTargetInterface;
 class RealSolver
 { 
 public:
-	static void Solve(const IRealProjectileInterface* Projectile, const IRealTargetInterface* Target, const FHitResult& HitResult);
+	static void Solve(IRealProjectileInterface* Projectile, IRealTargetInterface* Target, const FHitResult& HitResult);
 };

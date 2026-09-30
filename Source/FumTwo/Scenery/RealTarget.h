@@ -53,4 +53,5 @@ public:
 	);
 
 	virtual const URealMaterialDataAsset* GetMaterial() const override;
+	virtual const void OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepth, double Radius) override;
 };
