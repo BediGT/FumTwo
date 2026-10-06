@@ -7,16 +7,12 @@
 
 class UStaticMesh;
 class UInstancedStaticMeshComponent;
-class UBoxComponent;
 class URealMaterialDataAsset;
 
 UCLASS()
 class FUMTWO_API ARealTarget : public AActor, public IRealTargetInterface
 {
 	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere, Category = "Meshes")
-	TObjectPtr<UBoxComponent> BoundingBox = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "Meshes")
 	TObjectPtr<UInstancedStaticMeshComponent> InstancedStaticMesh = nullptr;
@@ -42,16 +38,6 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION()
-	virtual void OnOverlapBegin(
-		UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& OverlapResult
-	);
-
 	virtual const URealMaterialDataAsset* GetMaterial() const override;
-	virtual const void OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepth, double Radius) override;
+	virtual const void OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepthInCm, double Radius) override;
 };

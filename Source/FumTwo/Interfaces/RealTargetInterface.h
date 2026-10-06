@@ -19,5 +19,5 @@ class FUMTWO_API IRealTargetInterface
 
 public:
 	virtual const URealMaterialDataAsset* GetMaterial() const = 0;
-	virtual const void OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepth, double Radius) = 0;
+	virtual const void OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepthInCm, double Radius) = 0;
 };

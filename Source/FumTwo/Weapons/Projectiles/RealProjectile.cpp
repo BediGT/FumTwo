@@ -33,8 +33,13 @@ void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 {
 	Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, HitResult);
 
-	if (const auto RealTarget = Cast<IRealTargetInterface>(OtherActor))
-		RealSolver::Solve(this, RealTarget, HitResult);
+	const auto RealTarget = Cast<IRealTargetInterface>(OtherActor);
+	if (!RealTarget || bOverlapped)
+		return;
+
+	SetActorLocation(HitResult.Location);
+	RealSolver::Solve(this, RealTarget, HitResult);
+	bOverlapped = true;
 }
 
 void ARealProjectile::OnHit(

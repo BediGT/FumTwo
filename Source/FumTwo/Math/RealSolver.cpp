@@ -26,7 +26,7 @@ void RealSolver::Solve(IRealProjectileInterface* Projectile, IRealTargetInterfac
 
 	const double CriticalSpeedSquared = 2.0 * FMath::Abs((TargetResistance - ProjectileMaterial->YieldStrength) / ProjectileMaterial->Density);
 
-	const FVector ProjectileVelocity = Projectile->GetProjectileVelocity().GetSafeNormal();
+	const FVector ProjectileDirection = Projectile->GetProjectileVelocity().GetSafeNormal();
 	const double ProjectileSpeed = Projectile->GetProjectileVelocity().Length() * 0.01; // cm -> m
 	const double ProjectileSpeedSquared = FMath::Square(ProjectileSpeed);
 
@@ -44,8 +44,8 @@ void RealSolver::Solve(IRealProjectileInterface* Projectile, IRealTargetInterfac
 
 	const FVector ImpactNormal = HitResult.ImpactNormal;
 
-	double Dot = FVector::DotProduct(ProjectileVelocity, ImpactNormal);
-	double ASq = ProjectileVelocity.SquaredLength();
+	double Dot = FVector::DotProduct(ProjectileDirection, ImpactNormal);
+	double ASq = ProjectileDirection.SquaredLength();
 	double BSq = ImpactNormal.SquaredLength();
 
 	double TanSquared = (ASq * BSq - Dot * Dot) / (Dot * Dot);
@@ -57,8 +57,10 @@ void RealSolver::Solve(IRealProjectileInterface* Projectile, IRealTargetInterfac
 	else if (!FMath::IsNearlyZero(PenetrationSpeed))
 	{
 		const double Penetration = ProjectileMaterial->Density * ProjectileSpeedSquared * ProjectileProperties->EffectiveLength / (2.0 * TargetResistance);
-		Target->OnImpact(HitResult.ImpactPoint, ProjectileVelocity, Penetration, ProjectileProperties->Caliber * 0.5);
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Green, FString::Printf(TEXT("Penetration: %lf"), Penetration));
+		const double PenetrationInCm = Penetration * 100.0;
+		const double ProjectileRadiusInCm = ProjectileProperties->Caliber * 0.5 * 100.0;
+		Target->OnImpact(HitResult.ImpactPoint, ProjectileDirection, PenetrationInCm, ProjectileRadiusInCm);
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Green, FString::Printf(TEXT("Penetration: %lf [cm]"), Penetration));
 	}
 	else
 	{

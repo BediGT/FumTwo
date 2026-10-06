@@ -1,6 +1,5 @@
 #include "RealTarget.h"
 #include "Components/InstancedStaticMeshComponent.h"
-#include "Components/BoxComponent.h"
 #include "../DataAssets/RealMaterialDataAsset.h"
 #include "Engine/OverlapResult.h"
 
@@ -8,18 +7,11 @@ ARealTarget::ARealTarget()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Bounding Box"));
-	BoundingBox->SetCollisionProfileName(TEXT("OverlapAll"));
-	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &ARealTarget::OnOverlapBegin);
-	RootComponent = BoundingBox;
-
 	InstancedStaticMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Instanced Static Mesh"));
 	InstancedStaticMesh->SetCollisionProfileName(TEXT("OverlapAll"));
 	InstancedStaticMesh->SetCanEverAffectNavigation(false);
 	InstancedStaticMesh->SetGenerateOverlapEvents(true);
-	InstancedStaticMesh->SetupAttachment(RootComponent);
-
-	//InstancedStaticMesh->bHasPerInstanceHitProxies = false;
+	RootComponent = InstancedStaticMesh;
 }
 
 void ARealTarget::BeginPlay()
@@ -35,9 +27,6 @@ void ARealTarget::OnConstruction(const FTransform& Transform)
 		return;
 
 	LastDimensions = Dimensions;
-
-	FVector Extent{ Dimensions.X * 0.5f, Dimensions.Y * 0.5f, Dimensions.Z * 0.5f };
-	BoundingBox->SetBoxExtent(Extent);
 
 	InstancedStaticMesh->ClearInstances();
 
@@ -71,56 +60,35 @@ void ARealTarget::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ARealTarget::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& OverlapResult)
-{
-	/*if (!OtherActor || OtherActor == this || !InstancedStaticMesh)
-		return;
-
-	int32 HitIndex = OverlapResult.MyItem;
-
-	if (InstancedStaticMesh->IsValidInstance(HitIndex))
-	{
-		FTransform Transform{};
-		InstancedStaticMesh->GetInstanceTransform(HitIndex, Transform);
-		Transform.SetScale3D(FVector::ZeroVector);
-		InstancedStaticMesh->UpdateInstanceTransform(HitIndex, Transform);
-	}*/
-}
-
 const URealMaterialDataAsset* ARealTarget::GetMaterial() const
 {
 	return Material;
 }
 
-const void ARealTarget::OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepth, double Radius)
+const void ARealTarget::OnImpact(const FVector& ImpactPoint, const FVector& ImpactDirection, double PenetrationDepthInCm, double Radius)
 {
 	if (!GetWorld())
 		return;
 
 	FVector Direction = ImpactDirection.GetSafeNormal();
 	FVector StartTrace = ImpactPoint;
-	FVector EndTrace = ImpactPoint + (ImpactDirection * PenetrationDepth);
+	FVector EndTrace = ImpactPoint + (ImpactDirection * PenetrationDepthInCm);
 
-	auto CylinderShape = FCollisionShape::MakeCapsule(Radius, PenetrationDepth * 0.5f);
+	const auto CylinderShape = FCollisionShape::MakeCapsule(Radius, PenetrationDepthInCm * 0.5f);
 
-	FVector CenterPoint = ImpactPoint + (Direction * (PenetrationDepth * 0.5f));
-	FQuat Rotation = Direction.ToOrientationQuat();
+	FVector CenterPoint = ImpactPoint + (Direction * (PenetrationDepthInCm * 0.5f));
+	FQuat Rotation = FRotationMatrix::MakeFromZ(Direction).ToQuat();
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = true;
 
 	TArray<FOverlapResult> OverlapResults{};
 
-	bool bHit = GetWorld()->OverlapMultiByChannel(
+	bool bHit = GetWorld()->OverlapMultiByProfile(
 		OverlapResults,
 		CenterPoint,
 		Rotation,
-		ECC_GameTraceChannel1,
+		TEXT("Projectile"),
 		CylinderShape,
 		QueryParams
 	);

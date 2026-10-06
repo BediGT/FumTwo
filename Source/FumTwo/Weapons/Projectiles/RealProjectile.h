@@ -24,6 +24,8 @@ class FUMTWO_API ARealProjectile : public AProjectile, public IRealProjectileInt
 	UPROPERTY(EditAnywhere, Category = "Debug Options")
 	bool bDrawPath = false;
 
+	bool bOverlapped = false;
+
 	FVector LastPosition{};
 
 	FString CsvData{};
