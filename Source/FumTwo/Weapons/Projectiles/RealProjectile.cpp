@@ -3,30 +3,25 @@
 
 #include "RealProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "../../Math/Constants.h"
+#include "../../Math/RealSolver.h"
+#include "../../Interfaces/RealTargetInterface.h"
 
 ARealProjectile::ARealProjectile()
 	: Super()
 {
-	StaticMeshComponent->SetMassOverrideInKg(NAME_None, Mass, true);
-
-	ProjectileMovement->MaxSpeed = 0.f;
-	ProjectileMovement->InitialSpeed = 23000.f; // 230 m/s
-	ProjectileMovement->ProjectileGravityScale = 1.f;
-
-	InitialLifeSpan = 0.0f;
-
 	CsvData = TEXT("Speed;Vel.X;Vel.Y;Vel.Z\n");
 }
 
 void ARealProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UpdateBullet(DeltaTime);
 
-	DrawDebugLine(GetWorld(), GetActorLocation() - GetVelocity() * DeltaTime, GetActorLocation(), FColor::Green, false, 180.f, 0, 1.5f);
+	UpdateBullet(DeltaTime);
+	
+	if (bDrawPath)
+		DrawPath();
 }
 
 void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
@@ -34,8 +29,17 @@ void ARealProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex,
 	bool bFromSweep,
-	const FHitResult& OverlapResult)
+	const FHitResult& HitResult)
 {
+	Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, HitResult);
+
+	const auto RealTarget = Cast<IRealTargetInterface>(OtherActor);
+	if (!RealTarget || bOverlapped)
+		return;
+
+	SetActorLocation(HitResult.Location);
+	RealSolver::Solve(this, RealTarget, HitResult);
+	bOverlapped = true;
 }
 
 void ARealProjectile::OnHit(
@@ -59,10 +63,12 @@ void ARealProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ARealProjectile::UpdateBullet(float DeltaTime)
 {
-	const float Speed = GetVelocity().Size();
+	if (!ProjectileProperties || !ProjectileMovement)
+		return;
 
-	const float DragForce = 0.5 * AerodynamicCoefficient * Math::AirDensity * CrossSectionArea * Speed * Speed;
-	const float DragDeceleration = DragForce / Mass;
+	const double SpeedSquared = GetVelocity().SquaredLength() * FMath::Square(0.01); // cm^2 -> m^2
+	const double DragForce = 0.5f * ProjectileProperties->AerodynamicCoefficient * Math::AirDensity * ProjectileProperties->CrossArea * SpeedSquared;
+	const double DragDeceleration = DragForce / ProjectileProperties->Mass * 100.0; // -> cm^2
 
 	const FVector DragVector = -GetVelocity().GetSafeNormal();
 	ProjectileMovement->Velocity += DragVector * DragDeceleration * DeltaTime;
@@ -73,4 +79,26 @@ void ARealProjectile::UpdateBullet(float DeltaTime)
 		ProjectileMovement->Velocity.Y,
 		ProjectileMovement->Velocity.Z
 	);
+}
+
+void ARealProjectile::DrawPath()
+{
+	const FVector CurrentPosition = GetActorLocation();
+
+	if (LastPosition.Equals(FVector::ZeroVector, 10e-6))
+		LastPosition = CurrentPosition;
+
+	DrawDebugSphere(GetWorld(), CurrentPosition, 1.f, 1, FColor::Red, false, 20.f, 0, 1.f);
+	DrawDebugLine(GetWorld(), LastPosition, CurrentPosition, FColor::Green, false, 20.f, 0, 0.5f);
+	LastPosition = CurrentPosition;
+}
+
+const URealProjectileDataAsset* ARealProjectile::GetProjectileProperties() const
+{
+	return ProjectileProperties;
+}
+
+const FVector ARealProjectile::GetProjectileVelocity() const
+{
+	return ProjectileMovement->Velocity;
 }

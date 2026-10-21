@@ -5,26 +5,28 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.h"
+#include "../../Interfaces/RealProjectileInterface.h"
+#include "../../DataAssets/RealProjectileDataAsset.h"
 #include "RealProjectile.generated.h"
 
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
+class URealProjectileDataAsset;
 
 UCLASS()
-class FUMTWO_API ARealProjectile : public AProjectile
+class FUMTWO_API ARealProjectile : public AProjectile, public IRealProjectileInterface
 {
 	GENERATED_BODY()
 
-	// Params for cal .338
+	UPROPERTY(EditAnywhere, Category = "Projectile Properties")
+	const TObjectPtr<URealProjectileDataAsset> ProjectileProperties{};
 
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float AerodynamicCoefficient = 0.3;
+	UPROPERTY(EditAnywhere, Category = "Debug Options")
+	bool bDrawPath = false;
 
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float Mass = 0.045; // kg
+	bool bOverlapped = false;
 
-	UPROPERTY(EditAnywhere, Category = "Physical Properties")
-	float CrossSectionArea = 0.578; // cm^2
+	FVector LastPosition{};
 
 	FString CsvData{};
 
@@ -33,24 +35,28 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	void OnOverlapBegin(
+	virtual void OnOverlapBegin(
 		UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex,
 		bool bFromSweep,
 		const FHitResult& OverlapResult
-	);
+	) override;
 
-	void OnHit(
+	virtual void OnHit(
 		UPrimitiveComponent* HitComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse,
 		const FHitResult& Hit
-	);
+	) override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void UpdateBullet(float DeltaTime);
+	void DrawPath();
+
+	virtual const URealProjectileDataAsset* GetProjectileProperties() const override;
+	virtual const FVector GetProjectileVelocity() const override;
 };

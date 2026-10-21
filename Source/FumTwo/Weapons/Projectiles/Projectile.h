@@ -18,12 +18,6 @@ class FUMTWO_API AProjectile : public AActor
 	UPROPERTY()
 	const UDamageDA* DamageDA = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
-	float MovementSpeed = 10000.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile Stats")
-	float Gravity = 0.0f;
-
 protected:
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovement = nullptr;
@@ -39,7 +33,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void OnOverlapBegin(
+	virtual void OnOverlapBegin(
 		UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
@@ -49,7 +43,7 @@ public:
 	);
 
 	UFUNCTION()
-	void OnHit(
+	virtual void OnHit(
 		UPrimitiveComponent* HitComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
