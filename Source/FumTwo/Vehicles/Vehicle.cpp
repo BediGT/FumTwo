@@ -7,7 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "InputActionValue.h"
-#include "FumTwo/Interfaces/MainController.h"
+#include "../Player/Controller/MainController.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "GameFramework/SpringArmComponent.h"
 

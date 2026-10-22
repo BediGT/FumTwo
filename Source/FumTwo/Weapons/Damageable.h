@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "../DataAssets/DamageDA.h"
+#include "DamageDA.h"
 #include "Damageable.generated.h"
 
 // This class does not need to be modified.

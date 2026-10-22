@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include"../../DataAssets/DamageDA.h"
+#include"DamageDA.h"
 #include "Projectile.generated.h"
 
 class UProjectileMovementComponent;

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "../Enums/EnumPickupTypes.h"
+#include "EnumPickupTypes.h"
 #include "Pickup.generated.h"
 
 class UStaticMeshComponent;

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../Enums/EnumEquipmentType.h"
+#include "EnumEquipmentType.h"
 #include "EquipmentComponent.generated.h"
 
 class AEquipment;

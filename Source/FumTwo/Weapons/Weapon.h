@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "../Enums/EnumWeaponTypes.h"
-#include "../Interfaces/Interactable.h"
-#include "../Interfaces/AmmoSource.h"
-#include "../Interfaces/AutoInteractable.h"
+#include "EnumWeaponTypes.h"
+#include "../Interaction/Interactable.h"
+#include "AmmoSource.h"
+#include "../Interaction/AutoInteractable.h"
 #include "Weapon.generated.h"
 
 class AProjectile;

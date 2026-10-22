@@ -3,7 +3,7 @@
 
 #include "EquipmentPickup.h"
 #include "../Equipment/EquipmentComponent.h"
-#include "FumTwo/Interfaces/Interactor.h"
+#include "../Interaction/Interactor.h"
 
 AEquipmentPickup::AEquipmentPickup()
 {

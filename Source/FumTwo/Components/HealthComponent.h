@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../DataAssets/DamageDA.h"
+#include "../Weapons/DamageDA.h"
 #include "HealthComponent.generated.h"
 
 DECLARE_DELEGATE(FOnZeroHealth);

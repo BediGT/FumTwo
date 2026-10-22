@@ -5,8 +5,8 @@
 #include "Grenade.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
-#include "FumTwo/Enums/EnumPickupTypes.h"
-#include "FumTwo/Pickups/Pickup.h"
+#include "../Pickups/EnumPickupTypes.h"
+#include "../Pickups/Pickup.h"
 
 
 UGrenadesComponent::UGrenadesComponent()

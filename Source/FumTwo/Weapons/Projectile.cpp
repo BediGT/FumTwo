@@ -5,7 +5,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "../../Interfaces/Damageable.h"
+#include "Damageable.h"
 
 AProjectile::AProjectile()
 {

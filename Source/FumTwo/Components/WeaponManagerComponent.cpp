@@ -1,6 +1,6 @@
 #include "WeaponManagerComponent.h"
 #include "../Weapons/Weapon.h"
-#include "../Interfaces/AmmoSource.h"
+#include "../Weapons/AmmoSource.h"
 #include <GameFramework/Actor.h>
 
 
