@@ -17,10 +17,7 @@ class FUMTWO_API AEnemy : public ACharacter, public IDamageable
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	UWeakspotComponent* WeakspotComponent = nullptr;
-
-	UPROPERTY(EditAnywhere)
-	UHealthComponent* HealthComponent = nullptr;
+	TObjectPtr<UHealthComponent> HealthComponent = nullptr;
 
 public:
 	AEnemy();

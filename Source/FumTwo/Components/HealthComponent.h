@@ -26,6 +26,9 @@ class FUMTWO_API UHealthComponent : public UActorComponent
 	UPROPERTY()
 	float Shield = 1;
 
+	UPROPERTY(EditAnywhere, Category = "Weakspot bones")
+	TSet<FName> WeakspotBones;
+
 public:
 	FOnZeroHealth OnZeroHealthDelegate{};
 	
@@ -37,5 +40,5 @@ protected:
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void TakeDamage(const UDamageDA* DamageDA, bool bWeakspotHit);
+	void TakeDamage(const UDamageDA* DamageDA, FName BoneName);
 };
