@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "../Enums/EnumWeaponTypes.h"
+#include "../Weapons/EnumWeaponTypes.h"
 #include "WeaponManagerComponent.generated.h"
 
 class AWeapon;

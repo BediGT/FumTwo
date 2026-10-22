@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Pickup.h"
-#include "../Enums/EnumEquipmentType.h"
-#include "../Interfaces/Interactable.h"
+#include "../Equipment/EnumEquipmentType.h"
+#include "../Interaction/Interactable.h"
 #include "EquipmentPickup.generated.h"
 
 class UBoxComponent;

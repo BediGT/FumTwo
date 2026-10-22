@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "../Enums/EnumWeaponTypes.h"
+#include "EnumWeaponTypes.h"
 #include "AmmoSource.generated.h"
 
 UINTERFACE()

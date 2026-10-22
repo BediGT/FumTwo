@@ -2,7 +2,7 @@
 
 
 #include "MainGameModeBase.h"
-#include "Player/PlayerCharacter.h"
+#include "../Player/PlayerCharacter.h"
 
 FUMTWO_API AMainGameModeBase::AMainGameModeBase()
 {

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FumTwo/Enums/EnumEquipmentType.h"
-#include "FumTwo/Enums/EnumWeaponTypes.h"
+#include "../Equipment/EnumEquipmentType.h"
+#include "../Weapons/EnumWeaponTypes.h"
 #include "UObject/Interface.h"
 #include "Interactor.generated.h"
 

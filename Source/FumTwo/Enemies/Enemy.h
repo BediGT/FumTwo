@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "../Interfaces/Damageable.h"
+#include "../Weapons/Damageable.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 

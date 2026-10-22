@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FumTwo/Interfaces/MainController.h"
+#include "MainController.h"
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 

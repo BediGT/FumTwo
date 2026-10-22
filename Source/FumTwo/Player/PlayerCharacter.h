@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "../Interfaces/Interactor.h"
-#include "FumTwo/Interfaces/Possessable.h"
-#include "FumTwo/Interfaces/Passenger.h"
+#include "../Interaction/Interactor.h"
+#include "Controller/Possessable.h"
+#include "../Vehicles/Passenger.h"
 #include <Containers/Array.h>
 #include <UObject/WeakInterfacePtr.h>
 #include <UObject/ObjectPtr.h>

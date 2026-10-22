@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "FumTwo/Interfaces/Interactable.h"
-#include "FumTwo/Interfaces/Possessable.h"
-#include "FumTwo/Interfaces/Passenger.h"
-#include "FumTwo/Interfaces/MainController.h"
+#include "../Interaction/Interactable.h"
+#include "../Player/Controller/Possessable.h"
+#include "Passenger.h"
+#include "../Player/Controller/MainController.h"
 #include "GameFramework/Pawn.h"
 #include "Vehicle.generated.h"
 

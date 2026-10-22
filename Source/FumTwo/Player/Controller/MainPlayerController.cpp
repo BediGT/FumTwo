@@ -4,13 +4,13 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "FumTwo/Interfaces/Possessable.h"
-#include "FumTwo/Camera/MainPlayerCameraManager.h"
-#include "PlayerHUD.h"
+#include "Possessable.h"
+#include "../Camera/MainPlayerCameraManager.h"
+#include "../PlayerHUD.h"
 #include "Blueprint/UserWidget.h"
-#include "../Components/WeaponManagerComponent.h"
-#include "../Grenades/GrenadeComponent.h"
-#include "PlayerCharacter.h"
+#include "../../Components/WeaponManagerComponent.h"
+#include "../../Grenades/GrenadeComponent.h"
+#include "../PlayerCharacter.h"
 
 AMainPlayerController::AMainPlayerController()
 {

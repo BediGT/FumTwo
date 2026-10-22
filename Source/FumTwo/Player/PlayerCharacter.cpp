@@ -8,13 +8,13 @@
 #include "Components/CapsuleComponent.h"
 #include "../Equipment/EquipmentComponent.h"
 #include "../Grenades/GrenadeComponent.h"
-#include "../Interfaces/Interactable.h"
-#include "../Interfaces/AutoInteractable.h"
+#include "../Interaction/Interactable.h"
+#include "../Interaction/AutoInteractable.h"
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
-#include "FumTwo/Interfaces/MainController.h"
-#include <FumTwo/Interfaces/AmmoSource.h>
-#include <FumTwo/Components/WeaponManagerComponent.h>
+#include "Controller/MainController.h"
+#include "../Weapons/AmmoSource.h"
+#include "../Components/WeaponManagerComponent.h"
 #include <Math/UnrealMathUtility.h>
 
 APlayerCharacter::APlayerCharacter()
