@@ -2,7 +2,6 @@
 
 
 #include "Enemy.h"
-#include "../Components/WeakspotComponent.h"
 #include "../Components/HealthComponent.h"
 
 AEnemy::AEnemy()
@@ -13,7 +12,6 @@ AEnemy::AEnemy()
 	MeshComponent->SetCollisionProfileName(TEXT("Hitbox"));
 	MeshComponent->SetGenerateOverlapEvents(true);
 	
-	WeakspotComponent = CreateDefaultSubobject<UWeakspotComponent>(TEXT("Weakspot Component"));
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
@@ -38,7 +36,7 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AEnemy::TakeDamage(const UDamageDA& DamageData, const FName& BoneName)
 {
 	if (HealthComponent)
-		HealthComponent->TakeDamage(&DamageData, WeakspotComponent->IsBoneWeakspot(BoneName));
+		HealthComponent->TakeDamage(&DamageData, BoneName);
 }
 
 void AEnemy::Die() const

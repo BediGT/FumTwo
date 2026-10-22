@@ -19,11 +19,11 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UHealthComponent::TakeDamage(const UDamageDA* DamageDA, bool bWeakspotHit)
+void UHealthComponent::TakeDamage(const UDamageDA* DamageDA, FName BoneName)
 {
 	float Damage = DamageDA->Damage;
 	
-	if (bWeakspotHit)
+	if (WeakspotBones.Contains(BoneName))
 		Damage *= DamageDA->CriticalMultiplier;
 
 	if (MaxShield > 0.0f && Shield > 0.0f && DamageDA->AntiShieldMultiplier > 0.0f)
@@ -42,4 +42,3 @@ void UHealthComponent::TakeDamage(const UDamageDA* DamageDA, bool bWeakspotHit)
 	UE_LOG(LogTemp, Error, TEXT("\nHealth: %f"), Health);
 	UE_LOG(LogTemp, Error, TEXT("Shield: %f\n"), Shield);
 }
-
