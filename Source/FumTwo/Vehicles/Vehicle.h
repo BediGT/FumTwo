@@ -3,9 +3,9 @@
 #pragma once
 
 #include "../Interaction/Interactable.h"
-#include "../Player/Controller/Possessable.h"
+#include "../Controller/Possessable.h"
 #include "Passenger.h"
-#include "../Player/Controller/MainController.h"
+#include "../Controller/MainController.h"
 #include "GameFramework/Pawn.h"
 #include "Vehicle.generated.h"
 
