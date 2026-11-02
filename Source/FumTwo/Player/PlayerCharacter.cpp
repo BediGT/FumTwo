@@ -12,7 +12,7 @@
 #include "../Interaction/AutoInteractable.h"
 #include "../Pickups/EquipmentPickup.h"
 #include "../Weapons/Weapon.h"
-#include "Controller/MainController.h"
+#include "../Controller/MainController.h"
 #include "../Weapons/AmmoSource.h"
 #include "../Components/WeaponManagerComponent.h"
 #include <Math/UnrealMathUtility.h>

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "../Interaction/Interactor.h"
-#include "Controller/Possessable.h"
+#include "../Controller/Possessable.h"
 #include "../Vehicles/Passenger.h"
 #include <Containers/Array.h>
 #include <UObject/WeakInterfacePtr.h>
