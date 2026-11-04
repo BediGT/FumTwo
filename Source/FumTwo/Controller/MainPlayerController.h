@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
+class UPauseMenuWidget;
 class IPossessable;
 class UInputAction;
 struct FInputActionValue;
@@ -19,27 +20,32 @@ UCLASS()
 class FUMTWO_API AMainPlayerController : public APlayerController, public IMainController
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = "Controller Settings")
-	float DefaultFov = 98.0f;
 	
-	double Sensitivity = 0.0f;
+	float Sensitivity = 1.f;
 
 	UPROPERTY(EditAnywhere, Category = "Control Settings")
-	double DefaultSensitivity = 0.253994f;
+	float DefaultSensitivity = 1.f;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultInputMapping = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> IA_Look = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> IA_OpenPauseMenu = nullptr;
 
-	// Head Up Display
-	UPROPERTY(EditAnywhere, Category = "HUD")
+	UPROPERTY(EditAnywhere, Category = "Widgets")
 	TSubclassOf<UPlayerHUD> HUDClass = nullptr;
 
 	UPROPERTY()
 	TObjectPtr<UPlayerHUD> HUD = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "Widgets")
+	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass = nullptr;
+	
+	UPROPERTY()
+	TObjectPtr<UPauseMenuWidget> PauseMenuWidget = nullptr;
 
 public:
 	AMainPlayerController();
@@ -49,7 +55,7 @@ protected:
 	virtual void SetupInputComponent() override;
 
 	void Look(const FInputActionValue& Value);
-	virtual void SetZoomedSensitivity(const float& ZoomFov);
+	virtual void SetZoomedSensitivity(const float ZoomFov);
 
 	void BindWeaponManagerToHUD(UWeaponManagerComponent* WeaponManager);
 	static void UnbindWeaponManagerFromHUD(UWeaponManagerComponent* WeaponManager);
@@ -64,4 +70,10 @@ public:
 	virtual void ZoomIn(float ZoomFov) override;
 	virtual void ResetZoom() override;
 	virtual void SwitchPawn(APawn* NewPawn) override;
+	
+private:
+	void SwitchInputToGameplay();
+	void SwitchInputToUI();
+	void SynchronizeSettings();
+	void OpenPauseMenu();
 };
