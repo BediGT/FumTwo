@@ -7,7 +7,7 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
-1
+
 void UPauseMenuWidget::ShowWidget()
 {
 	SetVisibility(ESlateVisibility::Visible);
