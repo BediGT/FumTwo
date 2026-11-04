@@ -4,7 +4,7 @@
 AMainPlayerCameraManager::AMainPlayerCameraManager()
 	: Super()
 {
-	DefaultFOV = 69.f;
+	DefaultFOV = 90.f;
 }
 
 void AMainPlayerCameraManager::BeginPlay()

@@ -3,12 +3,24 @@
 
 #include "MainMenuWidget.h"
 #include "Components/Button.h"
+#include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "SettingsWidget.h"
 
 void UMainMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	bIsFocusable = true;
+	
+	if (WidgetSettings)
+	{
+		WidgetSettings->OnBack.BindLambda([this]
+		{
+			if (WidgetSwitcherMenu)
+				WidgetSwitcherMenu->SetActiveWidgetIndex(0);
+		});
+	}
 	
 	if (ButtonPlay)
 		ButtonPlay->OnClicked.AddDynamic(this, &UMainMenuWidget::OnPlayClicked);
@@ -29,7 +41,8 @@ void UMainMenuWidget::OnPlayClicked()
 
 void UMainMenuWidget::OnSettingsClicked()
 {
-	// Open settings
+	if (WidgetSwitcherMenu)
+		WidgetSwitcherMenu->SetActiveWidget(WidgetSettings);
 }
 
 void UMainMenuWidget::OnQuitClicked()

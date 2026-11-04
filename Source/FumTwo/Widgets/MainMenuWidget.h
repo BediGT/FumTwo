@@ -6,21 +6,29 @@
 #include "Blueprint/UserWidget.h"
 #include "MainMenuWidget.generated.h"
 
+class UWidgetSwitcher;
 class UButton;
+class USettingsWidget;
 
 UCLASS()
 class FUMTWO_API UMainMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UButton* ButtonPlay{};
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UWidgetSwitcher> WidgetSwitcherMenu;
 	
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UButton* ButtonSettings{};
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<USettingsWidget> WidgetSettings{};
 	
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UButton* ButtonQuit{};
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ButtonQuit{};
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ButtonPlay{};
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ButtonSettings{};
 	
 protected:
 	virtual void NativeConstruct() override;

@@ -7,10 +7,11 @@
 #include "Possessable.h"
 #include "../Camera/MainPlayerCameraManager.h"
 #include "../Widgets/PlayerHUD.h"
-#include "Blueprint/UserWidget.h"
+#include "../Widgets/PauseMenuWidget.h"
 #include "../Components/WeaponManagerComponent.h"
 #include "../Grenades/GrenadeComponent.h"
 #include "../Player/PlayerCharacter.h"
+#include "../GameSettings/SettingsSubsystem.h"
 
 AMainPlayerController::AMainPlayerController()
 {
@@ -22,12 +23,7 @@ void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	bShowMouseCursor = false;;
-	const FInputModeGameOnly InputMode;
-	SetInputMode(InputMode);
-
-	Sensitivity = DefaultSensitivity;
-	PlayerCameraManager->DefaultFOV = DefaultFov;
+	SwitchInputToGameplay();
 
 	if (const auto Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		Subsystem->AddMappingContext(DefaultInputMapping, 0);
@@ -35,18 +31,42 @@ void AMainPlayerController::BeginPlay()
 	if (HUDClass)
 	{
 		HUD = CreateWidget<UPlayerHUD>(this, HUDClass);
-		HUD->AddToPlayerScreen();
+		HUD->AddToPlayerScreen(0);
+	}
+	
+	if (PauseMenuWidgetClass)
+	{
+		PauseMenuWidget = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
+		PauseMenuWidget->OnClose.BindLambda([this]
+		{
+			SwitchInputToGameplay();
+		});
+		PauseMenuWidget->AddToPlayerScreen(1);
+		PauseMenuWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	if (const auto PossessedPawn = GetPawn())
 		SetupPawn(PossessedPawn);
+	
+	SynchronizeSettings();
+	
+	if (const UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (const auto SettingsSubsystem = GameInstance->GetSubsystem<USettingsSubsystem>())
+			SettingsSubsystem->OnSettingsChanged.AddUObject(this, &AMainPlayerController::SynchronizeSettings);
+	}
 }
 
 void AMainPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	if (const auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AMainPlayerController::Look);
+	
+	const auto EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!EnhancedInputComponent)
+		return;
+	
+	EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AMainPlayerController::Look);
+	EnhancedInputComponent->BindAction(IA_OpenPauseMenu, ETriggerEvent::Started, this, &AMainPlayerController::OpenPauseMenu);
 }
 
 void AMainPlayerController::Look(const FInputActionValue& Value)
@@ -56,13 +76,17 @@ void AMainPlayerController::Look(const FInputActionValue& Value)
 	AddPitchInput(-LookAxisVector.Y * Sensitivity);
 }
 
-void AMainPlayerController::SetZoomedSensitivity(const float& ZoomFov)
+void AMainPlayerController::SetZoomedSensitivity(const float ZoomFov)
 {
+	if (!PlayerCameraManager)
+		return;
+	
+	const float DefaultFov = PlayerCameraManager->DefaultFOV;
 	if (FMath::IsNearlyEqual(DefaultFov, ZoomFov))
 		return;
 	
 	const float Coefficient = FMath::Tan(FMath::DegreesToRadians(ZoomFov / 2.0f)) / FMath::Tan(FMath::DegreesToRadians(DefaultFov / 2.0f));
-	Sensitivity = static_cast<double>(Coefficient) * DefaultSensitivity;
+	Sensitivity = Coefficient * DefaultSensitivity;
 }
 
 void AMainPlayerController::BindWeaponManagerToHUD(UWeaponManagerComponent* WeaponManager)
@@ -162,4 +186,44 @@ void AMainPlayerController::SwitchPawn(APawn* NewPawn)
 
 	UnPossess();
 	Possess(NewPawn);
+}
+
+void AMainPlayerController::SwitchInputToGameplay()
+{
+	bShowMouseCursor = false;
+	const FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+}
+
+void AMainPlayerController::SwitchInputToUI()
+{
+	bShowMouseCursor = true;
+	const FInputModeUIOnly InputMode;
+	SetInputMode(InputMode);
+}
+
+void AMainPlayerController::SynchronizeSettings()
+{
+	const UGameInstance* GameInstance = GetGameInstance();
+	if (!GameInstance)
+		return;
+	
+	const auto SettingsSubsystem = GameInstance->GetSubsystem<USettingsSubsystem>();
+	if (!SettingsSubsystem)
+		return;
+	
+	const FGameSettings& GameSettings = SettingsSubsystem->GetSettings();
+	
+	DefaultSensitivity = GameSettings.Sensitivity;
+	Sensitivity = DefaultSensitivity;
+	PlayerCameraManager->DefaultFOV = GameSettings.FieldOfView;
+}
+
+void AMainPlayerController::OpenPauseMenu()
+{
+	if (!PauseMenuWidget)
+		return;
+	
+	SwitchInputToUI();
+	PauseMenuWidget->ShowWidget();
 }
